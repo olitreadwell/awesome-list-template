@@ -4,26 +4,28 @@ SHELL := /bin/bash
 READMES := readme.md
 
 .PHONY: install check check-fast fix coverage lint typecheck format fmt-check \
-	list-check toc toc-check stats stats-check sources export site \
-	submission-check \
-	compliance-audit \
-	links links-diff jobs-due jobs-links jobs-drift jobs-triage jobs-publish \
-	hooks-install repo-setup test docs-serve
+	list-check toc toc-check stats stats-check sources export \
+	export-check submission-check compliance-audit links links-diff \
+	jobs-due jobs-links jobs-drift jobs-stats hooks-install repo-setup test
 
 install:
 	uv sync --frozen --group dev
 	cd tools && npm ci
 
-# export, site, and e2e join this list once those modules exist.
-check: lint typecheck fmt-check toc-check list-check stats-check awesome-lint coverage
+FIXTURE := --readme tests/fixtures/readme/clean.md --config tests/fixtures/readme/awesome.toml
+
+# Every check that costs nothing and needs no network, except coverage.
+check: lint typecheck fmt-check toc-check list-check stats-check export-check awesome-lint coverage
 
 check-fast:
 	uv run ruff format --check --diff $(shell git diff --name-only --diff-filter=ACMR -- '*.py' 2>/dev/null || true)
 	uv run codespell readme.md src tests
-	uv run python -m awesome_list.cli.run_toc --check --readme tests/fixtures/readme/clean.md --config tests/fixtures/readme/awesome.toml
-	uv run python -m awesome_list.cli.run_list_check --readme tests/fixtures/readme/clean.md --config tests/fixtures/readme/awesome.toml
+	uv run python -m awesome_list.cli.run_toc --check $(FIXTURE)
+	uv run python -m awesome_list.cli.run_list_check $(FIXTURE)
 
-check-full: check site e2e lighthouse
+# check plus the checks that need the network or a browser. The site is not
+# built yet, so site, e2e, and lighthouse are not in here.
+check-full: check links-diff
 
 lint:
 	uv run ruff check
@@ -69,16 +71,10 @@ toc-check:
 	uv run python -m awesome_list.cli.run_toc --check --readme tests/fixtures/readme/clean.md --config tests/fixtures/readme/awesome.toml
 
 export:
-	uv run python -m awesome_list.cli.run_export
+	uv run python -m awesome_list.cli.run_export $(FIXTURE) --out tests/fixtures/readme/exports
 
-site:
-	uv run python -m awesome_list.cli.run_site
-
-e2e:
-	uv run pytest -m e2e
-
-lighthouse:
-	cd tools && npx @lhci/cli autorun --config=../lighthouserc.json
+export-check:
+	uv run python -m awesome_list.cli.run_export --check $(FIXTURE) --out tests/fixtures/readme/exports
 
 awesome-lint:
 	ci/awesome-lint-fixture.sh
@@ -90,10 +86,10 @@ compliance-audit:
 	uv run python -m awesome_list.cli.run_compliance_audit
 
 links:
-	lychee --config lychee.toml readme.md
+	uv run python -m awesome_list.cli.run_links
 
 links-diff:
-	uv run python -m awesome_list.cli.run_links_diff
+	uv run python -m awesome_list.cli.run_links --diff
 
 jobs-due:
 	jobs/run-due.sh
@@ -104,11 +100,8 @@ jobs-links:
 jobs-drift:
 	jobs/drift.sh
 
-jobs-triage:
-	jobs/triage.sh
-
-jobs-publish:
-	jobs/publish.sh
+jobs-stats:
+	jobs/stats.sh
 
 hooks-install:
 	uv run python -m awesome_list.cli.run_hooks_install
@@ -116,5 +109,3 @@ hooks-install:
 repo-setup:
 	uv run python -m awesome_list.cli.run_repo_setup
 
-docs-serve:
-	uv run python -m http.server --directory site 8000

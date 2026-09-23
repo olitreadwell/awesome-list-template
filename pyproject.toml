@@ -16,6 +16,11 @@ awesome-list-check = "awesome_list.cli.run_list_check:main"
 awesome-list-sources = "awesome_list.cli.run_sources:main"
 awesome-list-stats = "awesome_list.cli.run_stats:main"
 awesome-list-toc = "awesome_list.cli.run_toc:main"
+awesome-list-audit = "awesome_list.cli.run_compliance_audit:main"
+awesome-list-export = "awesome_list.cli.run_export:main"
+awesome-list-links = "awesome_list.cli.run_links:main"
+awesome-list-setup = "awesome_list.cli.run_repo_setup:main"
+awesome-list-submit = "awesome_list.cli.run_submission_check:main"
 
 [dependency-groups]
 dev = [

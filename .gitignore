@@ -16,4 +16,6 @@ tools/node_modules/
 playwright-report/
 test-results/
 lychee/out.md
+.lycheecache
+reports/
 .DS_Store

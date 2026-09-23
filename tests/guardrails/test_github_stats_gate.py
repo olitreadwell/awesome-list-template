@@ -45,7 +45,20 @@ def test_the_sources_report_is_never_a_readme_write(repo_root: Path) -> None:
     assert "readme_path.write_text" not in cli
 
 
-def test_network_calls_live_in_one_module(repo_root: Path) -> None:
+# Every module allowed to shell out, and why. Adding one here is a deliberate
+# act: it is the list a reader checks to find every place the engine leaves the
+# process.
+SHELL_OUT_ALLOWED = {
+    "cli/run_hooks_install.py",  # git config core.hooksPath
+    "github/fetch_repo_stats.py",  # gh api repos/{slug}
+    "links/run_lychee.py",  # lychee over the readme, and git show for --diff
+    "repo/github_repo_settings.py",  # gh api for topics and description
+}
+
+
+def test_subprocess_use_is_confined_to_the_modules_that_say_so(
+    repo_root: Path,
+) -> None:
     src = repo_root / "src" / "awesome_list"
     callers = {
         path.relative_to(src).as_posix()
@@ -53,4 +66,4 @@ def test_network_calls_live_in_one_module(repo_root: Path) -> None:
         if "subprocess" in path.read_text(encoding="utf-8")
     }
 
-    assert callers == {"cli/run_hooks_install.py", "github/fetch_repo_stats.py"}
+    assert callers == SHELL_OUT_ALLOWED

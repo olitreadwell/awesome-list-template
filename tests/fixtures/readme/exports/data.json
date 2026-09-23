@@ -1,0 +1,73 @@
+{
+  "name": "Awesome Example",
+  "repo_slug": "awesome-example",
+  "generated_at": "2026-09-23",
+  "entry_count": 5,
+  "sections": [
+    {
+      "name": "Start here",
+      "entries": [
+        {
+          "name": "Example Portal",
+          "url": "https://example.govt.nz/",
+          "description": "the catalogue of example datasets.",
+          "tags": [
+            "Data",
+            "Open"
+          ],
+          "group": null,
+          "line": 12
+        },
+        {
+          "name": "Example API",
+          "url": "https://api.example.govt.nz/",
+          "description": "programmatic access with a developer key.",
+          "tags": [
+            "API",
+            "Key"
+          ],
+          "group": null,
+          "line": 13
+        },
+        {
+          "name": "Tagged Only",
+          "url": "https://tagged.example.com/",
+          "description": ".",
+          "tags": [
+            "Data",
+            "Open"
+          ],
+          "group": null,
+          "line": 14
+        }
+      ]
+    },
+    {
+      "name": "Tools",
+      "entries": [
+        {
+          "name": "First Tool",
+          "url": "https://tool.example.com/",
+          "description": "what the first tool holds.",
+          "tags": [
+            "Data",
+            "Open"
+          ],
+          "group": "Example Group",
+          "line": 19
+        },
+        {
+          "name": "Second Tool",
+          "url": "https://second.example.com/",
+          "description": "what the second tool holds.",
+          "tags": [
+            "Portal",
+            "Login"
+          ],
+          "group": "Example Group",
+          "line": 20
+        }
+      ]
+    }
+  ]
+}

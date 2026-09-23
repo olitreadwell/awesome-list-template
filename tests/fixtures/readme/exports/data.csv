@@ -1,0 +1,6 @@
+section,group,name,url,description,tags,line
+Start here,,Example Portal,https://example.govt.nz/,the catalogue of example datasets.,Data Open,12
+Start here,,Example API,https://api.example.govt.nz/,programmatic access with a developer key.,API Key,13
+Start here,,Tagged Only,https://tagged.example.com/,.,Data Open,14
+Tools,Example Group,First Tool,https://tool.example.com/,what the first tool holds.,Data Open,19
+Tools,Example Group,Second Tool,https://second.example.com/,what the second tool holds.,Portal Login,20

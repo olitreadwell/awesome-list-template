@@ -168,32 +168,51 @@ runs on a laptop or on a runner, and none needs a hosted pipeline.
 make install             # uv sync, plus npm ci in tools/
 make check               # the full gate, see below
 make check-fast          # pre-commit subset, under 10 seconds
+make check-full          # check plus the checks that need the network
 make toc                 # rewrite the Contents section
 make toc-check           # fail if the Contents section is stale
 make list-check          # grammar, duplicates, tags, TOC, grouping, GitHub stats
 make stats               # fetch stars and last push dates, write the snapshot
 make stats-check         # fail when the snapshot or an entry is out of date
 make sources             # candidates from upstream lists, written as a report
-make export              # data.json, data.csv, feed.xml, sitemap.xml
-make site                # build site/ , only when site.enabled = true
+make export              # data.json, data.ndjson, data.csv
+make export-check        # fail when those three files are behind
 make submission-check    # awesome.re readiness report
-make compliance-audit    # pinned guideline rules, citations, guardrails
-make links               # lychee over readme.md and docs
+make compliance-audit    # repository settings that drifted, read only
+make links               # lychee over the readme, config generated from awesome.toml
 make links-diff          # lychee over URLs added in this branch
 make jobs-due            # run any scheduled job that is overdue
 make jobs-links          # link check, report, optional issue
+make jobs-stats          # stats refresh, commits only when the numbers moved
 make jobs-drift          # upstream guideline drift
-make jobs-triage         # answer new issues, optional PR
-make jobs-publish        # build and push the gh-pages branch
 make hooks-install       # core.hooksPath = .githooks
 make repo-setup          # gh api, dry-run by default
 ```
 
-`make check` runs, in order: `ruff check`, `ruff format --check`, `mypy`,
-`prettier --check`, `toc-check`, `list-check`, `stats-check`, `awesome-lint`,
-`pytest` with the guardrail and parity suites, `compliance-audit`, `export`, and,
-when `site.enabled` is true, `site`, `pytest -m e2e`, and Lighthouse. It is the single
-gate, and the pre-push hook, the nightly audit job, and a human all call it.
+`make check` runs, in order: `ruff check`, `mypy`, `ruff format --check`,
+`prettier --check`, `toc-check`, `list-check`, `stats-check`, `export-check`,
+`awesome-lint`, and `pytest` with the coverage floor and the guardrail and
+parity suites. It is the single gate, and the pre-push hook, the scheduled
+audit, and a human all call it.
+
+### Built, and not yet built
+
+This spec describes the whole engine. What exists today is: the parse model,
+the rules, the TOC, GitHub stats, upstream sources, the three exports, the
+lychee wrapper and its diff mode, the submission checks, the repository
+settings audit and setup, the hooks, and the job scripts listed above.
+
+Not built yet, and written up here rather than wired:
+
+- the site (`src/awesome_list/site/`, `site/`, Pagefind, `e2e/`, Lighthouse),
+  so `make site`, `make e2e`, and `make lighthouse` do not exist
+- the Atom feed, the sitemap, and JSON-LD
+- the guideline registry (`awesome_re_rules.py`) and its drift job
+- dead-entry remediation and local archiving (`plan_dead_entry_fix.py`,
+  `archive_page_locally.py`)
+- the issue triage, PR annotation, and publish job scripts
+
+`AUTOMATIONS.md` carries a row per automation with the same distinction.
 
 `make check-fast` is the pre-commit subset: `ruff format --check` on changed
 files, `prettier --check` on changed files, and `toc-check` plus `list-check`.
@@ -219,16 +238,15 @@ src/awesome_list/
   parse/                      markdown-it token stream to ListSection, ListEntry
   rules/                      one rule per module: check_entry_grammar.py, ...
   toc/                        render_contents.py, sync_contents.py
-  export/                     export_data_json.py, export_data_csv.py,
-                              export_atom_feed.py, export_sitemap.py
-  site/                       build_static_site.py, render_index_html.py
-  submission/                 check_awesome_re_readiness.py, awesome_re_rules.py
+  export/                     build_exports.py, JSON, NDJSON, and CSV
+  site/                       not built yet
+  submission/                 check_submission.py
+  repo/                       audit_repo_settings.py, github_repo_settings.py
   github/                     github_repo_slug, format_stats, apply_github_stats,
                               fetch_repo_stats.py, stats_snapshot.py
   sources/                    parse_table_entries.py, propose_source_entries.py,
                               fetch_source_readme.py
-  links/                      extract_added_urls.py, plan_dead_entry_fix.py,
-                              archive_page_locally.py
+  links/                      added_urls.py, lychee_config.py, run_lychee.py
   slug/                       github_slug.py, matching github-slugger output
 schemas/
   entry.schema.json           one entry
@@ -251,7 +269,8 @@ ci/
   adapters/                   github-actions.yml (not installed), gitlab-ci.yml,
                               woodpecker.yml, buildkite.sh
 jobs/
-  links.sh  drift.sh  triage.sh  publish.sh  annotate.sh  audit.sh  run-due.sh
+  links.sh  stats.sh  drift.sh  run-due.sh
+  triage.sh  publish.sh  annotate.sh  audit.sh       not built yet
 schedule/
   launchd/  systemd/  crontab.example
 .githooks/

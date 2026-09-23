@@ -26,11 +26,20 @@ make stats-check   # fail when the snapshot or the readme is behind
 make sources       # candidates from upstream lists, as a report, never entries
 make toc           # rewrite the Contents section
 make toc-check     # fail when the Contents section is stale
-make export        # data.json, data.csv, feed.xml, sitemap.xml
-make site          # optional site, only when site.enabled = true
+make export        # data.json, data.ndjson, data.csv
+make export-check  # fail when those files are behind
+make links         # lychee over the whole list
+make links-diff    # lychee over only the URLs this branch adds
+make submission-check  # the awesome.re rules a script can decide
+make compliance-audit  # repository settings that drifted, read only
+make repo-setup    # set topics, description, and branch; dry run by default
 make check         # the full gate
 make check-fast    # the pre-commit subset
+make check-full    # check plus the checks that need the network
 ```
+
+The site is not built yet. `site.enabled = true` is honoured by the config and
+by nothing else, so `make site`, `make e2e`, and `make lighthouse` do not exist.
 
 ## Using it for a list
 
@@ -46,8 +55,9 @@ make check-fast    # the pre-commit subset
      awesome-list-check
    ```
 
-   The same shape works for `awesome-list-toc`, `awesome-list-stats`, and
-   `awesome-list-sources`.
+   The same shape works for `awesome-list-toc`, `awesome-list-stats`,
+   `awesome-list-sources`, `awesome-list-export`, `awesome-list-links`,
+   `awesome-list-submit`, `awesome-list-audit`, and `awesome-list-setup`.
 
 6. Add the engine as a dependency in the list repo's `pyproject.toml`:
 
@@ -78,6 +88,10 @@ make check-fast    # the pre-commit subset
 - `src/awesome_list/sources/` reads upstream lists for candidates. It proposes,
   it never writes an entry.
 - `src/awesome_list/toc/` renders and syncs the Contents section.
-- `src/awesome_list/export/` writes data.json, data.csv, the feed, and the sitemap.
-- `src/awesome_list/submission/` holds the pinned awesome.re requirements.
-- `jobs/` holds the scheduled scripts. `SPEC.md` is the full contract.
+- `src/awesome_list/export/` writes data.json, data.ndjson, and data.csv.
+- `src/awesome_list/links/` renders the lychee config and picks the URLs a
+  branch added.
+- `src/awesome_list/repo/` reads and writes repository settings through `gh`.
+- `src/awesome_list/submission/` holds the awesome.re submission checks.
+- `jobs/` holds the scheduled scripts, and `jobs/run-due.sh` runs whatever a
+  sleeping laptop missed. `SPEC.md` is the full contract.
