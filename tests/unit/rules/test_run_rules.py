@@ -40,6 +40,24 @@ def test_file_is_recorded_on_every_violation(
     assert {violation.file for violation in violations} == {"LIST.md"}
 
 
+def test_grouping_is_only_checked_for_declared_entry_sections(
+    fixture_readme: Callable[[str], str],
+) -> None:
+    text = fixture_readme("dirty-grouping.md")
+    without = run_rules(parse_readme(text), text, DEFAULT_TAG_VOCABULARY)
+    with_sections = run_rules(
+        parse_readme(text),
+        text,
+        DEFAULT_TAG_VOCABULARY,
+        entry_sections=("Empty Group", "Empty Section", "Tools"),
+    )
+
+    assert not [
+        v for v in without if v.rule == "grouping" and "has no entries" in v.message
+    ]
+    assert [v for v in with_sections if v.rule == "grouping"]
+
+
 def test_duplicates_and_toc_are_reported(fixture_readme: Callable[[str], str]) -> None:
     text = fixture_readme("dirty-toc.md")
     rules = {

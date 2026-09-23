@@ -29,6 +29,17 @@ def test_parses_entries_with_tags(fixture_readme: Callable[[str], str]) -> None:
     assert entry.line == 12
 
 
+def test_tag_only_entry_keeps_its_period(fixture_readme: Callable[[str], str]) -> None:
+    document = parse_readme(fixture_readme("clean.md"))
+    entry = next(item for item in document.entries if item.name == "Tagged Only")
+
+    assert [(tag.axis, tag.label) for tag in entry.tags] == [
+        ("type", "Data"),
+        ("access", "Open"),
+    ]
+    assert entry.description == "."
+
+
 def test_parses_groups(fixture_readme: Callable[[str], str]) -> None:
     document = parse_readme(fixture_readme("clean.md"))
     tools = document.sections[1]

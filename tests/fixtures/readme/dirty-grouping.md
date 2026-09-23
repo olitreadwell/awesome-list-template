@@ -11,6 +11,7 @@
 ## Empty Group
 
 - Empty Group Name
+    - a child bullet that is not a link.
 
 ## Empty Section
 
@@ -18,4 +19,5 @@
 
 - [Deep Parent](https://deep.example.com/) - ▦ Data - ○ Open - a parent entry.
     - [Nested Under Entry](https://nested.example.com/) - ▦ Data - ○ Open - nested under an entry.
-        - [Too Deep](https://deep3.example.com/) - ▦ Data - ○ Open - nested far too deep.
+        - [One Level Down](https://deep3.example.com/) - ▦ Data - ○ Open - allowed under an entry.
+            - [Too Deep](https://deep4.example.com/) - ▦ Data - ○ Open - nested far too deep.

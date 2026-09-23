@@ -7,12 +7,24 @@ from awesome_list.rules.rule_violation import RuleViolation
 
 RULE = "grouping"
 
+# A group of entries is level two, and this list style allows one level of
+# sub-entries under an entry, which is level three.
+MAX_ENTRY_DEPTH = 3
 
-def check_grouping(document: ListDocument) -> tuple[RuleViolation, ...]:
-    """Return every grouping problem in the document."""
+
+def check_grouping(
+    document: ListDocument, entry_sections: tuple[str, ...] = ()
+) -> tuple[RuleViolation, ...]:
+    """Return every grouping problem in the document.
+
+    A section is only expected to hold entries when the config lists it, so
+    prose sections such as Contributing or Legend are left alone.
+    """
     violations: list[RuleViolation] = []
 
     for section in document.sections:
+        if section.name not in entry_sections:
+            continue
         if not section.entries and not section.groups:
             violations.append(
                 RuleViolation(
@@ -44,13 +56,13 @@ def check_grouping(document: ListDocument) -> tuple[RuleViolation, ...]:
                         " by removing its link",
                     )
                 )
-            if entry.depth > 2:
+            if entry.depth > MAX_ENTRY_DEPTH:
                 violations.append(
                     RuleViolation(
                         rule=RULE,
                         line=entry.line,
                         message=f"{entry.name} is nested too deep",
-                        fix="keep entries at one level under a group name",
+                        fix="keep entries at most two levels under a group name",
                     )
                 )
 

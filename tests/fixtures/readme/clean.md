@@ -11,6 +11,7 @@
 
 - [Example Portal](https://example.govt.nz/) - ▦ Data - ○ Open - the catalogue of example datasets.
 - [Example API](https://api.example.govt.nz/) - ⇄ API - ◑ Key - programmatic access with a developer key.
+- [Tagged Only](https://tagged.example.com/) - ▦ Data - ○ Open.
 
 ## Tools
 

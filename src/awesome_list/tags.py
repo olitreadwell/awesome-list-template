@@ -52,7 +52,10 @@ class TagVocabulary:
                 for candidate in (f"{glyph} {label}", label):
                     if inner.lower().startswith(candidate.lower()):
                         after = inner[len(candidate) :]
-                        if after and after[0] not in " -\u2013\u2014:":
+                        # A label ends at punctuation or end of line, so
+                        # "- ▦ Data - ○ Open." still reads as the Open tag and
+                        # the period stays for the sentence check.
+                        if after and (after[0].isalnum() or after[0] in "_"):
                             continue
                         return TagMatch(
                             remainder=_strip_separator(after),

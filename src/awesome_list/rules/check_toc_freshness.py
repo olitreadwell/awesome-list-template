@@ -30,7 +30,11 @@ def check_toc_freshness(document: ListDocument, text: str) -> tuple[RuleViolatio
     listed = [_entry_name(line) for line in lines[start:end]]
     listed = [name for name in listed if name]
 
-    expected = [section.name for section in document.sections]
+    expected = [
+        section.name
+        for section in document.sections
+        if section.name.strip().lower() not in DENIED_TOC_SECTIONS
+    ]
     violations: list[RuleViolation] = []
 
     for line_number, name in zip(range(start + 1, end + 1), listed, strict=False):

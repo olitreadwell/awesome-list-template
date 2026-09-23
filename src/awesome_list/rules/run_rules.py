@@ -21,6 +21,7 @@ def run_rules(
     vocabulary: TagVocabulary,
     *,
     file: str = "readme.md",
+    entry_sections: tuple[str, ...] = (),
 ) -> tuple[RuleViolation, ...]:
     """Return every violation in the document, ordered by line."""
     violations: list[RuleViolation] = []
@@ -31,7 +32,7 @@ def run_rules(
         violations.extend(check_tag_vocabulary(entry, vocabulary))
 
     violations.extend(check_duplicate_urls(document))
-    violations.extend(check_grouping(document))
+    violations.extend(check_grouping(document, entry_sections))
     violations.extend(check_toc_freshness(document, text))
 
     return tuple(

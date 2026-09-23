@@ -45,6 +45,13 @@ class _ItemDraft:
 
 
 @dataclass
+class _GroupDraft:
+    item: _ItemDraft
+    entries: list[ListEntry] = field(default_factory=list)
+    has_children: bool = False
+
+
+@dataclass
 class _SectionDraft:
     name: str
     line: int
@@ -131,7 +138,7 @@ def _build_section(
     draft: _SectionDraft, vocabulary: TagVocabulary, raw_lines: tuple[str, ...]
 ) -> ListSection:
     entries: list[ListEntry] = []
-    groups: list[tuple[_ItemDraft, list[ListEntry]]] = []
+    groups: list[_GroupDraft] = []
     last_kind: str | None = None
 
     for item in draft.items:
@@ -142,21 +149,27 @@ def _build_section(
                     entries.append(entry)
                 last_kind = "entry"
             else:
-                groups.append((item, []))
+                # An unlinked bullet is only a group when something sits under
+                # it. On its own it is a plain bullet, which lists use for
+                # "start here" pointers.
+                groups.append(_GroupDraft(item=item))
                 last_kind = "group"
             continue
 
-        if item.depth == 2 and last_kind == "group" and groups:
-            entry = _build_entry(item, vocabulary, depth=2, raw_lines=raw_lines)
+        if last_kind == "group" and groups:
+            groups[-1].has_children = True
+            entry = _build_entry(
+                item, vocabulary, depth=item.depth, raw_lines=raw_lines
+            )
             if entry is not None:
-                groups[-1][1].append(entry)
+                groups[-1].entries.append(entry)
             continue
 
         entry = _build_entry(
             item,
             vocabulary,
             depth=item.depth,
-            nested_under_entry=last_kind == "entry",
+            nested_under_entry=item.depth == 2 and last_kind == "entry",
             raw_lines=raw_lines,
         )
         if entry is not None:
@@ -168,9 +181,12 @@ def _build_section(
         entries=tuple(entries),
         groups=tuple(
             ListGroup(
-                name=item.text.strip(), line=item.line, entries=tuple(group_entries)
+                name=group.item.text.strip(),
+                line=group.item.line,
+                entries=tuple(group.entries),
             )
-            for item, group_entries in groups
+            for group in groups
+            if group.has_children
         ),
     )
 

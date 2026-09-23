@@ -36,10 +36,12 @@ def build_parser() -> argparse.ArgumentParser:
 def main(argv: list[str] | None = None) -> int:
     """Run the command and return a process exit code."""
     args = build_parser().parse_args(argv)
-    readme_path, vocabulary = _resolve(args.readme, args.config)
+    readme_path, vocabulary, sections = _resolve(args.readme, args.config)
     text = readme_path.read_text(encoding="utf-8")
     document = parse_readme(text, vocabulary=vocabulary)
-    violations = run_rules(document, text, vocabulary, file=str(readme_path))
+    violations = run_rules(
+        document, text, vocabulary, file=str(readme_path), entry_sections=sections
+    )
 
     errors = tuple(v for v in violations if v.severity == "error")
     warnings = tuple(v for v in violations if v.severity == "warn")
@@ -56,7 +58,9 @@ def main(argv: list[str] | None = None) -> int:
     return 0
 
 
-def _resolve(explicit: str | None, config_path: str) -> tuple[Path, TagVocabulary]:
+def _resolve(
+    explicit: str | None, config_path: str
+) -> tuple[Path, TagVocabulary, tuple[str, ...]]:
     config_file = Path(config_path)
     if config_file.exists():
         try:
@@ -64,9 +68,9 @@ def _resolve(explicit: str | None, config_path: str) -> tuple[Path, TagVocabular
         except ListConfigError as error:
             raise SystemExit(f"awesome.toml: {error}") from error
         if explicit:
-            return Path(explicit), config.tags
-        return config.source_path.parent / config.readme, config.tags
-    return Path(explicit or "readme.md"), DEFAULT_TAG_VOCABULARY
+            return Path(explicit), config.tags, config.sections
+        return config.source_path.parent / config.readme, config.tags, config.sections
+    return Path(explicit or "readme.md"), DEFAULT_TAG_VOCABULARY, ()
 
 
 if __name__ == "__main__":
