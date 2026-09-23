@@ -23,6 +23,7 @@ make hooks-install
 make list-check    # entry grammar, tags, duplicates, URLs, TOC freshness, stats
 make stats         # fetch stars and last push dates for every GitHub link
 make stats-check   # fail when the snapshot or the readme is behind
+make sources       # candidates from upstream lists, as a report, never entries
 make toc           # rewrite the Contents section
 make toc-check     # fail when the Contents section is stale
 make export        # data.json, data.csv, feed.xml, sitemap.xml
@@ -63,6 +64,8 @@ make check-fast    # the pre-commit subset
 - `src/awesome_list/parse/` builds the model from the readme.
 - `src/awesome_list/rules/` holds one rule per module.
 - `src/awesome_list/github/` formats repo stats and fetches them through `gh`.
+- `src/awesome_list/sources/` reads upstream lists for candidates. It proposes,
+  it never writes an entry.
 - `src/awesome_list/toc/` renders and syncs the Contents section.
 - `src/awesome_list/export/` writes data.json, data.csv, the feed, and the sitemap.
 - `src/awesome_list/submission/` holds the pinned awesome.re requirements.

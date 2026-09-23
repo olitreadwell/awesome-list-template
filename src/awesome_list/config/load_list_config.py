@@ -12,6 +12,7 @@ from awesome_list.config.list_config import (
     LinksConfig,
     ListConfig,
     SiteConfig,
+    SourcesConfig,
 )
 from awesome_list.tags import DEFAULT_TAG_VOCABULARY, TagVocabulary
 
@@ -24,10 +25,12 @@ TOP_LEVEL_KEYS = {
     "site",
     "links",
     "github",
+    "sources",
     "tags",
 }
 LINKS_KEYS = {"archive", "exclude", "allowlist", "archive_limits"}
 GITHUB_KEYS = {"stats", "max_age_days", "snapshot"}
+SOURCES_KEYS = {"lists", "keywords", "report"}
 LIMIT_KEYS = {"per_file_bytes", "total_bytes"}
 TAG_AXES = ("type", "access", "status")
 
@@ -66,6 +69,7 @@ def load_list_config(path: Path) -> ListConfig:
         site=_load_site(raw.get("site", {})),
         links=_load_links(raw.get("links", {})),
         github=_load_github(raw.get("github", {})),
+        sources=_load_sources(raw.get("sources", {})),
         tags=_load_tags(raw.get("tags", {})),
         source_path=path,
     )
@@ -133,6 +137,22 @@ def _load_github(raw: Any) -> GithubConfig:
         stats=stats,
         max_age_days=_as_int(raw.get("max_age_days", 14), "github.max_age_days"),
         snapshot=_as_str(raw.get("snapshot", "github-stats.json"), "github.snapshot"),
+    )
+
+
+def _load_sources(raw: Any) -> SourcesConfig:
+    if not isinstance(raw, dict):
+        raise ListConfigError("sources must be a table")
+    unknown = sorted(set(raw) - SOURCES_KEYS)
+    if unknown:
+        raise ListConfigError(f"unknown key: sources.{unknown[0]}")
+
+    return SourcesConfig(
+        lists=_string_tuple(raw.get("lists", []), "sources.lists"),
+        keywords=_string_tuple(raw.get("keywords", []), "sources.keywords"),
+        report=_as_str(
+            raw.get("report", "reports/source-candidates.md"), "sources.report"
+        ),
     )
 
 

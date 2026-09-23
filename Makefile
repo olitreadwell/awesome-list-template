@@ -4,7 +4,8 @@ SHELL := /bin/bash
 READMES := readme.md
 
 .PHONY: install check check-fast fix coverage lint typecheck format fmt-check \
-	list-check toc toc-check stats stats-check export site submission-check \
+	list-check toc toc-check stats stats-check sources export site \
+	submission-check \
 	compliance-audit \
 	links links-diff jobs-due jobs-links jobs-drift jobs-triage jobs-publish \
 	hooks-install repo-setup test docs-serve
@@ -57,6 +58,9 @@ stats:
 
 stats-check:
 	uv run python -m awesome_list.cli.run_stats --check --readme tests/fixtures/readme/github.md --config tests/fixtures/readme/awesome.toml
+
+sources:
+	uv run python -m awesome_list.cli.run_sources --stdout
 
 toc:
 	uv run python -m awesome_list.cli.run_toc --readme tests/fixtures/readme/clean.md --config tests/fixtures/readme/awesome.toml

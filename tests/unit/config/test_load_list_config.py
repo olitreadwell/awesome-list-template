@@ -108,6 +108,39 @@ snapshot = "s.json"
     assert config.github.snapshot == "s.json"
 
 
+def test_sources_default_to_nothing(tmp_path: Path) -> None:
+    config = load_list_config(write(tmp_path, MINIMAL))
+
+    assert config.sources.lists == ()
+    assert config.sources.keywords == ()
+    assert config.sources.report == "reports/source-candidates.md"
+
+
+def test_reads_sources_section(tmp_path: Path) -> None:
+    body = (
+        MINIMAL
+        + """
+[sources]
+lists = ["https://upstream.test/list.md"]
+keywords = ["new zealand"]
+report = "reports/mine.md"
+"""
+    )
+
+    config = load_list_config(write(tmp_path, body))
+
+    assert config.sources.lists == ("https://upstream.test/list.md",)
+    assert config.sources.keywords == ("new zealand",)
+    assert config.sources.report == "reports/mine.md"
+
+
+def test_rejects_unknown_sources_key(tmp_path: Path) -> None:
+    body = MINIMAL + '[sources]\nmode = "mine"\n'
+
+    with pytest.raises(ListConfigError, match=r"unknown key: sources\.mode"):
+        load_list_config(write(tmp_path, body))
+
+
 def test_rejects_unknown_github_key(tmp_path: Path) -> None:
     body = MINIMAL + "[github]\nstars = true\n"
 

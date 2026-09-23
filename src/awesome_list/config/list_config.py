@@ -18,6 +18,15 @@ class SiteConfig:
 
 
 @dataclass(frozen=True, slots=True)
+class SourcesConfig:
+    """Upstream lists to mine for candidates. Mining never writes an entry."""
+
+    lists: tuple[str, ...] = ()
+    keywords: tuple[str, ...] = ()
+    report: str = "reports/source-candidates.md"
+
+
+@dataclass(frozen=True, slots=True)
 class GithubConfig:
     """Whether GitHub links carry stars and activity, and how fresh that is."""
 
@@ -49,5 +58,6 @@ class ListConfig:
     site: SiteConfig = SiteConfig()
     links: LinksConfig = LinksConfig()
     github: GithubConfig = GithubConfig()
+    sources: SourcesConfig = SourcesConfig()
     tags: TagVocabulary = DEFAULT_TAG_VOCABULARY
     source_path: Path = Path("awesome.toml")

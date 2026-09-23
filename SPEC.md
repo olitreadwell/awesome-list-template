@@ -83,6 +83,13 @@ stats` fetches stars, last push, and archived state through `gh api`, caches
     snapshot is older than `max_age_days`. Only `make stats` touches the
     network: `make stats-check` and `make list-check` read the cached snapshot,
     so a laptop with no connection still runs the whole gate.
+12. **Upstream lists are mined for candidates, never for entries.** `[sources]`
+    in `awesome.toml` names readmes to read (`public-apis/public-apis` is the
+    first one) and keywords to match. `make sources` parses their tables, drops
+    anything the list already carries, attaches repo stats where the upstream
+    link is a repository, and writes `reports/source-candidates.md`. It is a
+    report and nothing else: a human writes the entry, because awesome.re
+    rejects list content written by automation.
 
 ## Non-goals
 
@@ -166,6 +173,7 @@ make toc-check           # fail if the Contents section is stale
 make list-check          # grammar, duplicates, tags, TOC, grouping, GitHub stats
 make stats               # fetch stars and last push dates, write the snapshot
 make stats-check         # fail when the snapshot or an entry is out of date
+make sources             # candidates from upstream lists, written as a report
 make export              # data.json, data.csv, feed.xml, sitemap.xml
 make site                # build site/ , only when site.enabled = true
 make submission-check    # awesome.re readiness report
@@ -217,6 +225,8 @@ src/awesome_list/
   submission/                 check_awesome_re_readiness.py, awesome_re_rules.py
   github/                     github_repo_slug, format_stats, apply_github_stats,
                               fetch_repo_stats.py, stats_snapshot.py
+  sources/                    parse_table_entries.py, propose_source_entries.py,
+                              fetch_source_readme.py
   links/                      extract_added_urls.py, plan_dead_entry_fix.py,
                               archive_page_locally.py
   slug/                       github_slug.py, matching github-slugger output
@@ -332,20 +342,21 @@ Consequences that shape the design:
 
 ### What gets which test
 
-| Concern                                  | Level                                                  | Where                                   |
-| ---------------------------------------- | ------------------------------------------------------ | --------------------------------------- |
-| Parser (tokens to model)                 | unit, small                                            | `tests/unit/parse/`                     |
-| One rule each                            | unit, small, table-driven                              | `tests/unit/rules/`                     |
-| GitHub slug parity with `github-slugger` | unit plus parity                                       | `tests/unit/slug/`, `tests/parity/`     |
-| TOC render and sync                      | unit plus idempotence                                  | `tests/unit/toc/`                       |
-| Exports                                  | unit plus contract against `schemas/`                  | `tests/unit/export/`                    |
-| Site HTML                                | golden file, only when the site is on                  | `tests/golden/`                         |
-| CLI wiring, config loading               | unit with a temp dir                                   | `tests/unit/cli/`                       |
-| GitHub stats fetch, format, apply        | unit with an injected runner, never the network        | `tests/unit/github/`, `tests/unit/cli/` |
-| Readiness checker                        | unit per requirement, one end to end on a fixture repo | `tests/unit/submission/`                |
-| Link diff and archive planning           | unit over fixture diffs and recorded responses         | `tests/unit/links/`                     |
-| Job scripts                              | integration, `bash -n` plus a dry run                  | `tests/integration/jobs/`               |
-| Built site in a browser                  | E2E, medium, site on only                              | `e2e/`                                  |
+| Concern                                  | Level                                                  | Where                                    |
+| ---------------------------------------- | ------------------------------------------------------ | ---------------------------------------- |
+| Parser (tokens to model)                 | unit, small                                            | `tests/unit/parse/`                      |
+| One rule each                            | unit, small, table-driven                              | `tests/unit/rules/`                      |
+| GitHub slug parity with `github-slugger` | unit plus parity                                       | `tests/unit/slug/`, `tests/parity/`      |
+| TOC render and sync                      | unit plus idempotence                                  | `tests/unit/toc/`                        |
+| Exports                                  | unit plus contract against `schemas/`                  | `tests/unit/export/`                     |
+| Site HTML                                | golden file, only when the site is on                  | `tests/golden/`                          |
+| CLI wiring, config loading               | unit with a temp dir                                   | `tests/unit/cli/`                        |
+| GitHub stats fetch, format, apply        | unit with an injected runner, never the network        | `tests/unit/github/`, `tests/unit/cli/`  |
+| Upstream list mining                     | unit over a recorded readme, never the network         | `tests/unit/sources/`, `tests/unit/cli/` |
+| Readiness checker                        | unit per requirement, one end to end on a fixture repo | `tests/unit/submission/`                 |
+| Link diff and archive planning           | unit over fixture diffs and recorded responses         | `tests/unit/links/`                      |
+| Job scripts                              | integration, `bash -n` plus a dry run                  | `tests/integration/jobs/`                |
+| Built site in a browser                  | E2E, medium, site on only                              | `e2e/`                                   |
 
 ### Test rules
 
@@ -393,6 +404,8 @@ fails the gate instead of shipping.
   the hook file.
 - `only_toc_and_stats_write_the_readme`: no other CLI module writes `readme.md`,
   and `make stats-check` is in the gate and never shells out to `gh`.
+- `sources_report_is_never_a_readme_write`: `make sources` writes only the
+  report file.
 - `network_calls_live_in_one_module`: `subprocess` appears in
   `github/fetch_repo_stats.py` and `cli/run_hooks_install.py` and nowhere else.
 - `prettier_preserves_prose`: assert the config plus a paragraph round-trip.

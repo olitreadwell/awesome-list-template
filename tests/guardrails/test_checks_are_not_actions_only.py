@@ -11,6 +11,7 @@ REQUIRED_TARGETS = (
     "toc-check",
     "stats",
     "stats-check",
+    "sources",
     "export",
     "submission-check",
     "compliance-audit",

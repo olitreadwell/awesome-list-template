@@ -167,6 +167,20 @@ a failing fixture. Nothing on this list needs GitHub Actions.
     `src/awesome_list/rules/check_github_stats.py`,
     `src/awesome_list/cli/run_stats.py`.
 
+- [x] T17c Mine upstream lists for candidates (RED)
+  - Acceptance: `parse_table_entries` reads `| [Name](url) | Description |` rows with
+    their heading, skips header, separator, and linkless rows, and drops markdown
+    noise from text; `propose_source_entries` proposes only entries that match a
+    keyword and are not already in the readme; `render_source_report` says in the
+    report that nothing has been written; `make sources` writes
+    `reports/source-candidates.md`, never the readme, and is soft when every
+    upstream list is unreachable.
+  - Verify: `make test -- tests/unit/sources/ tests/unit/cli/test_sources_cli.py`.
+  - Files: `src/awesome_list/sources/parse_table_entries.py`,
+    `src/awesome_list/sources/propose_source_entries.py`,
+    `src/awesome_list/sources/fetch_source_readme.py`,
+    `src/awesome_list/cli/run_sources.py`.
+
 ## Phase 5: exports
 
 - [ ] T18 `data.json` and schema (RED)

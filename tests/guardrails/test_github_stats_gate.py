@@ -35,6 +35,16 @@ def test_stats_check_never_calls_the_network(repo_root: Path) -> None:
     assert "gh " not in target
 
 
+def test_the_sources_report_is_never_a_readme_write(repo_root: Path) -> None:
+    cli = (repo_root / "src" / "awesome_list" / "cli" / "run_sources.py").read_text(
+        encoding="utf-8"
+    )
+
+    assert "readme" in cli
+    assert "out_path.write_text" in cli
+    assert "readme_path.write_text" not in cli
+
+
 def test_network_calls_live_in_one_module(repo_root: Path) -> None:
     src = repo_root / "src" / "awesome_list"
     callers = {

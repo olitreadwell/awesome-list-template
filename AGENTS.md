@@ -41,6 +41,9 @@ allowed to do.
 - `src/awesome_list/toc/` renders and syncs the Contents section.
 - `src/awesome_list/github/` formats repo stats and is the only module that
   calls `gh`. Rules stay pure; the snapshot stays offline.
+- `src/awesome_list/sources/` mines upstream lists into
+  `reports/source-candidates.md`. A report is not an entry, and `make sources`
+  must never write the readme.
 - `src/awesome_list/export/` writes the machine-readable outputs.
 - `src/awesome_list/site/` builds the optional site.
 - `src/awesome_list/submission/` holds the pinned awesome.re requirements.
