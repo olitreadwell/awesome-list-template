@@ -59,6 +59,19 @@ class _SectionDraft:
     items: list[_ItemDraft] = field(default_factory=list)
 
 
+def _is_badge_only(inline: Token) -> bool:
+    """Say whether a paragraph holds nothing but images and links to images.
+
+    A readme that opens with a row of shields.io badges still carries its
+    tagline further down, and a badge row makes a useless repository
+    description and contents anchor.
+    """
+    children = inline.children or ()
+    has_image = any(child.type in {"image", "html_inline"} for child in children)
+    has_text = any(child.type == "text" and child.content.strip() for child in children)
+    return has_image and not has_text
+
+
 def parse_readme(
     text: str,
     *,
@@ -100,7 +113,11 @@ def parse_readme(
             inline = tokens[index + 1] if index + 1 < len(tokens) else None
             if title and not tagline and current is None and inline is not None:
                 candidate = inline.content.strip()
-                if candidate and not candidate.startswith("<!--"):
+                if (
+                    candidate
+                    and not candidate.startswith("<!--")
+                    and not _is_badge_only(inline)
+                ):
                     tagline = candidate
             index += 1
             continue

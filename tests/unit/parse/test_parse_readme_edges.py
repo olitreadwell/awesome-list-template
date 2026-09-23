@@ -213,3 +213,40 @@ def test_text_before_the_link_is_not_part_of_the_description() -> None:
     assert entry.name == "Awesome D3"
     assert entry.has_separator is True
     assert entry.description.startswith("A list of D3")
+
+
+BADGE_ROW_TAGLINE = """# Awesome Badged Things
+
+[![Entries](https://img.shields.io/badge/entries-12-brightgreen)](GUIDE.md)
+[![CI](https://github.com/example/example/actions/workflows/ci.yml/badge.svg)](https://github.com/example/example/actions/workflows/ci.yml)
+
+A living, link-checked list of badged things.
+
+## Tools
+
+- [First](https://first.example.com/) - does the first thing.
+"""
+
+IMAGE_ONLY_TAGLINE = """# Awesome Pictured Things
+
+![Directory](https://img.example.com/directory.svg)
+
+A picture is not a tagline.
+
+## Tools
+
+- [First](https://first.example.com/) - does the first thing.
+"""
+
+
+def test_a_linked_badge_row_is_not_the_tagline() -> None:
+    """A row of shields.io badges is a paragraph, and a useless description."""
+    document = parse_readme(BADGE_ROW_TAGLINE)
+
+    assert document.tagline == "A living, link-checked list of badged things."
+
+
+def test_a_bare_image_is_not_the_tagline() -> None:
+    document = parse_readme(IMAGE_ONLY_TAGLINE)
+
+    assert document.tagline == "A picture is not a tagline."
