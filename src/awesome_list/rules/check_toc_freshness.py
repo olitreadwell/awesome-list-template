@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from awesome_list.parse.readme_model import ListDocument
 from awesome_list.rules.rule_violation import RuleViolation
-from awesome_list.toc.render_contents import DENIED_TOC_SECTIONS
+from awesome_list.toc.render_contents import DENIED_TOC_SECTIONS, render_contents
 from awesome_list.toc.sync_contents import _find_contents_heading, _toc_block
 
 RULE = "toc-freshness"
@@ -30,11 +30,10 @@ def check_toc_freshness(document: ListDocument, text: str) -> tuple[RuleViolatio
     listed = [_entry_name(line) for line in lines[start:end]]
     listed = [name for name in listed if name]
 
-    expected = [
-        section.name
-        for section in document.sections
-        if section.name.strip().lower() not in DENIED_TOC_SECTIONS
-    ]
+    # Compare against what render_contents would write, so a nested heading in
+    # the readme is not reported as missing from its own table of contents.
+    expected = [_entry_name(line) for line in render_contents(document)]
+    known = {heading.text.strip() for heading in document.headings if heading.level > 1}
     violations: list[RuleViolation] = []
 
     for line_number, name in zip(range(start + 1, end + 1), listed, strict=False):
@@ -61,15 +60,16 @@ def check_toc_freshness(document: ListDocument, text: str) -> tuple[RuleViolatio
             )
 
     for line_number, name in zip(range(start + 1, end + 1), listed, strict=False):
-        if name not in expected and name.lower() not in DENIED_TOC_SECTIONS:
-            violations.append(
-                RuleViolation(
-                    rule=RULE,
-                    line=line_number,
-                    message=f"{name} is in the Contents section but not in the readme",
-                    fix="run make toc to regenerate the Contents section",
-                )
+        if name in expected or name.lower() in DENIED_TOC_SECTIONS or name in known:
+            continue
+        violations.append(
+            RuleViolation(
+                rule=RULE,
+                line=line_number,
+                message=f"{name} is in the Contents section but not in the readme",
+                fix="run make toc to regenerate the Contents section",
             )
+        )
 
     return tuple(violations)
 

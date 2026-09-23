@@ -51,3 +51,39 @@ def test_flags_denied_sections_in_toc(fixture_readme: Callable[[str], str]) -> N
     ]
 
     assert any("Footnotes must not appear" in message for message in messages)
+
+
+NESTED = """\
+# Awesome Nested [![Awesome](https://awesome.re/badge.svg)](https://awesome.re)
+
+> Nested headings.
+
+## Contents
+
+- [Tools](#tools)
+    - [Sub Tools](#sub-tools)
+
+## Tools
+
+- [A](https://a.example.com/) - ▦ Data - ○ Open - a tool.
+
+### Sub Tools
+
+- [B](https://b.example.com/) - ▦ Data - ○ Open - a sub tool.
+"""
+
+
+def test_a_nested_heading_in_the_contents_is_not_an_extra_line() -> None:
+    violations = check_toc_freshness(parse_readme(NESTED), NESTED)
+
+    assert violations == ()
+
+
+def test_a_nested_heading_missing_from_the_contents_is_reported() -> None:
+    text = NESTED.replace("    - [Sub Tools](#sub-tools)\n", "")
+
+    violations = check_toc_freshness(parse_readme(text), text)
+
+    assert [violation.message for violation in violations] == [
+        "Sub Tools is missing from the Contents section"
+    ]
