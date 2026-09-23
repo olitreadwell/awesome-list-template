@@ -36,7 +36,10 @@ def run_rules(
     allowed = frozenset(allowed_urls)
 
     for entry in document.entries:
-        violations.extend(check_entry_grammar(entry))
+        # A list that keeps detail bullets under an entry declares them as
+        # details, so the entry grammar does not apply to those lines.
+        if not (nested_details_allowed and entry.nested_under_entry):
+            violations.extend(check_entry_grammar(entry))
         violations.extend(check_url_shape(entry, allowed))
         violations.extend(check_tag_vocabulary(entry, vocabulary))
 

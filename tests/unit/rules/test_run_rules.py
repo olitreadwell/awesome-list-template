@@ -66,3 +66,23 @@ def test_duplicates_and_toc_are_reported(fixture_readme: Callable[[str], str]) -
     }
 
     assert "toc-freshness" in rules
+
+
+def test_nested_details_skip_the_entry_grammar(
+    fixture_readme: Callable[[str], str],
+) -> None:
+    """A detail bullet such as "Official instance: [x](y)" is not an entry."""
+    text = fixture_readme("dirty-nested-details.md")
+    strict = run_rules(parse_readme(text), text, DEFAULT_TAG_VOCABULARY)
+    opted_in = run_rules(
+        parse_readme(text),
+        text,
+        DEFAULT_TAG_VOCABULARY,
+        nested_details_allowed=True,
+    )
+
+    rules = {violation.rule for violation in strict}
+    assert "entry-grammar" in rules
+
+    opted_in_rules = {violation.rule for violation in opted_in}
+    assert "entry-grammar" not in opted_in_rules
