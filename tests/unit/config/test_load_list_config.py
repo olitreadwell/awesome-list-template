@@ -82,6 +82,46 @@ Legacy = "\u27f3"
     assert config.tags.status == (("Legacy", "\u27f3"),)
 
 
+def test_github_stats_default_on(tmp_path: Path) -> None:
+    config = load_list_config(write(tmp_path, MINIMAL))
+
+    assert config.github.stats is True
+    assert config.github.max_age_days == 14
+    assert config.github.snapshot == "github-stats.json"
+
+
+def test_reads_github_section(tmp_path: Path) -> None:
+    body = (
+        MINIMAL
+        + """
+[github]
+stats = false
+max_age_days = 30
+snapshot = "s.json"
+"""
+    )
+
+    config = load_list_config(write(tmp_path, body))
+
+    assert config.github.stats is False
+    assert config.github.max_age_days == 30
+    assert config.github.snapshot == "s.json"
+
+
+def test_rejects_unknown_github_key(tmp_path: Path) -> None:
+    body = MINIMAL + "[github]\nstars = true\n"
+
+    with pytest.raises(ListConfigError, match=r"unknown key: github\.stars"):
+        load_list_config(write(tmp_path, body))
+
+
+def test_rejects_non_boolean_github_stats(tmp_path: Path) -> None:
+    body = MINIMAL + '[github]\nstats = "yes"\n'
+
+    with pytest.raises(ListConfigError, match=r"github\.stats must be true or false"):
+        load_list_config(write(tmp_path, body))
+
+
 def test_rejects_unknown_top_level_key(tmp_path: Path) -> None:
     body = MINIMAL + "extra_section = 1\n"
 
@@ -131,6 +171,7 @@ def test_repository_config_loads(repo_root: Path) -> None:
 
     assert config.site.enabled is False
     assert config.links.archive == "off"
+    assert config.github.stats is True
     assert config.sections
 
 

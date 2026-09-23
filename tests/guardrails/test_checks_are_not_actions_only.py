@@ -9,6 +9,8 @@ REQUIRED_TARGETS = (
     "check-fast",
     "list-check",
     "toc-check",
+    "stats",
+    "stats-check",
     "export",
     "submission-check",
     "compliance-audit",

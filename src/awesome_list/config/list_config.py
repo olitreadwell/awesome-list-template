@@ -18,6 +18,15 @@ class SiteConfig:
 
 
 @dataclass(frozen=True, slots=True)
+class GithubConfig:
+    """Whether GitHub links carry stars and activity, and how fresh that is."""
+
+    stats: bool = True
+    max_age_days: int = 14
+    snapshot: str = "github-stats.json"
+
+
+@dataclass(frozen=True, slots=True)
 class LinksConfig:
     """How dead entries are handled."""
 
@@ -39,5 +48,6 @@ class ListConfig:
     badge: str = "default"
     site: SiteConfig = SiteConfig()
     links: LinksConfig = LinksConfig()
+    github: GithubConfig = GithubConfig()
     tags: TagVocabulary = DEFAULT_TAG_VOCABULARY
     source_path: Path = Path("awesome.toml")

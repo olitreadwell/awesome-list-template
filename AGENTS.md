@@ -10,7 +10,12 @@ allowed to do.
   those words, and the triage job copies them verbatim. awesome.re rejects lists
   and pull requests that are AI-generated.
 - Never let the build write `readme.md`. The build reads it. Only `make toc`
-  rewrites the Contents block, and only when asked.
+  rewrites the Contents block and only `make stats` rewrites stats segments, and
+  only when asked.
+- Never hand-write or hand-edit a stars segment. Run `make stats`: it reads the
+  GitHub API once, writes `github-stats.json`, and keeps the rest of the line
+  byte for byte. When `gh` fails, it keeps the last known numbers and changes
+  nothing.
 - Never point a main-list entry at an archived copy or a deprecated tool. It
   moves to `legacy.md` or it comes out.
 - No CI badge in `readme.md`, and no `awesome` or `awesome-list` GitHub topic on
@@ -34,6 +39,8 @@ allowed to do.
 - `src/awesome_list/parse/` turns `readme.md` into the entry model.
 - `src/awesome_list/rules/` holds one rule per module, named for the rule.
 - `src/awesome_list/toc/` renders and syncs the Contents section.
+- `src/awesome_list/github/` formats repo stats and is the only module that
+  calls `gh`. Rules stay pure; the snapshot stays offline.
 - `src/awesome_list/export/` writes the machine-readable outputs.
 - `src/awesome_list/site/` builds the optional site.
 - `src/awesome_list/submission/` holds the pinned awesome.re requirements.

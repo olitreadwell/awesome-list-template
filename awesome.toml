@@ -31,6 +31,15 @@ allowlist = []
 per_file_bytes = 2000000
 total_bytes = 50000000
 
+[github]
+# Every GitHub link in the list carries stars and a last-push date, refreshed by
+# make stats and checked offline by make stats-check. "stats" is on by default;
+# turning it off is for lists that deliberately link no repositories.
+stats = true
+# Past this age the gate warns and asks for make stats instead of failing hard.
+max_age_days = 14
+snapshot = "github-stats.json"
+
 [tags.type]
 API = "⇄"
 Data = "▦"

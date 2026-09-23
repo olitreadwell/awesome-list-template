@@ -4,7 +4,8 @@ SHELL := /bin/bash
 READMES := readme.md
 
 .PHONY: install check check-fast fix coverage lint typecheck format fmt-check \
-	list-check toc toc-check export site submission-check compliance-audit \
+	list-check toc toc-check stats stats-check export site submission-check \
+	compliance-audit \
 	links links-diff jobs-due jobs-links jobs-drift jobs-triage jobs-publish \
 	hooks-install repo-setup test docs-serve
 
@@ -13,7 +14,7 @@ install:
 	cd tools && npm ci
 
 # export, site, and e2e join this list once those modules exist.
-check: lint typecheck fmt-check toc-check list-check awesome-lint coverage
+check: lint typecheck fmt-check toc-check list-check stats-check awesome-lint coverage
 
 check-fast:
 	uv run ruff format --check --diff $(shell git diff --name-only --diff-filter=ACMR -- '*.py' 2>/dev/null || true)
@@ -50,6 +51,12 @@ coverage:
 
 list-check:
 	uv run python -m awesome_list.cli.run_list_check --readme tests/fixtures/readme/clean.md --config tests/fixtures/readme/awesome.toml
+
+stats:
+	uv run python -m awesome_list.cli.run_stats --readme tests/fixtures/readme/github.md --config tests/fixtures/readme/awesome.toml
+
+stats-check:
+	uv run python -m awesome_list.cli.run_stats --check --readme tests/fixtures/readme/github.md --config tests/fixtures/readme/awesome.toml
 
 toc:
 	uv run python -m awesome_list.cli.run_toc --readme tests/fixtures/readme/clean.md --config tests/fixtures/readme/awesome.toml

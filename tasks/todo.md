@@ -6,7 +6,7 @@ a failing fixture. Nothing on this list needs GitHub Actions.
 
 ## Phase 1: skeleton and gate
 
-- [ ] T01 Repo skeleton
+- [x] T01 Repo skeleton
   - Acceptance: `pyproject.toml` pins deps and declares `requires-python =
 ">=3.12"`; `uv.lock` committed; `tools/package.json` pins awesome-lint,
     prettier, and pagefind with a committed lockfile; `license` (CC0-1.0),
@@ -17,7 +17,7 @@ a failing fixture. Nothing on this list needs GitHub Actions.
   - Files: `pyproject.toml`, `uv.lock`, `tools/package.json`, `Makefile`,
     `awesome.toml`, `license`, `code-of-conduct.md`.
 
-- [ ] T02 Config loading (RED)
+- [x] T02 Config loading (RED)
   - Acceptance: `load_list_config` reads `awesome.toml` through `tomllib`, fills
     defaults, rejects unknown keys and a missing `name`, `repo_slug`, or
     `sections`, and returns a frozen dataclass. `site.enabled` defaults to false
@@ -26,7 +26,7 @@ a failing fixture. Nothing on this list needs GitHub Actions.
   - Files: `src/awesome_list/config/load_list_config.py`,
     `src/awesome_list/config/list_config.py`, `tests/unit/config/`.
 
-- [ ] T03 Gate and hooks
+- [x] T03 Gate and hooks
   - Acceptance: `ci/check.sh` runs `make check`; `.githooks/pre-commit` runs
     `make check-fast`; `.githooks/pre-push` runs `make check`;
     `.githooks/commit-msg` runs commitlint; `make hooks-install` sets
@@ -36,7 +36,7 @@ a failing fixture. Nothing on this list needs GitHub Actions.
   - Files: `ci/check.sh`, `.githooks/pre-commit`, `.githooks/pre-push`,
     `.githooks/commit-msg`, `src/awesome_list/cli/run_hooks_install.py`.
 
-- [ ] T04 GitHub slug (RED)
+- [x] T04 GitHub slug (RED)
   - Acceptance: `github_slug` matches `github-slugger` on a table of headings
     including punctuation, emoji, duplicates, and variation selectors, so TOC
     anchors resolve on GitHub.
@@ -45,7 +45,7 @@ a failing fixture. Nothing on this list needs GitHub Actions.
 
 ## Phase 2: parse
 
-- [ ] T05 Parser model and token walk (RED)
+- [x] T05 Parser model and token walk (RED)
   - Acceptance: `parse_readme` walks the markdown-it token stream into
     `ListDocument`, `ListSection`, `ListGroup`, `ListEntry`, `ListTag` with line
     numbers, skipping the Contents section and `Footnotes`.
@@ -53,7 +53,7 @@ a failing fixture. Nothing on this list needs GitHub Actions.
   - Files: `src/awesome_list/parse/parse_readme.py`,
     `src/awesome_list/parse/readme_model.py`, `tests/fixtures/readme/clean.md`.
 
-- [ ] T06 Parser edges (RED)
+- [x] T06 Parser edges (RED)
   - Acceptance: nested groups, indented bullets, inline code, emphasis, emoji in
     names, HTML comments inside the TOC, and multi-link description lines all
     parse to the expected model.
@@ -62,7 +62,7 @@ a failing fixture. Nothing on this list needs GitHub Actions.
 
 ## Phase 3: rules
 
-- [ ] T07 Violations and renderers (RED)
+- [x] T07 Violations and renderers (RED)
   - Acceptance: `RuleViolation` carries `rule`, `file`, `line`, `message`, `fix`;
     a terminal renderer and a Markdown renderer both consume it, one for the
     contributor and one for `jobs/annotate.sh`.
@@ -70,7 +70,7 @@ a failing fixture. Nothing on this list needs GitHub Actions.
   - Files: `src/awesome_list/rules/rule_violation.py`,
     `src/awesome_list/rules/render_violations.py`.
 
-- [ ] T08 `check_entry_grammar` (RED)
+- [x] T08 `check_entry_grammar` (RED)
   - Acceptance: flags a missing dash separator, lowercase description start,
     missing trailing period, and trailing whitespace; the clean fixture is zero
     violations.
@@ -78,20 +78,20 @@ a failing fixture. Nothing on this list needs GitHub Actions.
   - Files: `src/awesome_list/rules/check_entry_grammar.py`,
     `tests/fixtures/readme/dirty-grammar.md`.
 
-- [ ] T09 `check_duplicate_urls` (RED)
+- [x] T09 `check_duplicate_urls` (RED)
   - Acceptance: catches exact and normalized duplicates (trailing slash, `www.`,
     fragment), reports both lines, and blames the later entry.
   - Verify: `make test -- tests/unit/rules/test_check_duplicate_urls.py`.
   - Files: `src/awesome_list/rules/check_duplicate_urls.py`,
     `src/awesome_list/rules/normalize_url.py`.
 
-- [ ] T10 `check_url_shape` (RED)
+- [x] T10 `check_url_shape` (RED)
   - Acceptance: flags relative URLs, fragment-only URLs, `javascript:` URLs,
     `utm_*` parameters, and plain `http` where https answers.
   - Verify: `make test -- tests/unit/rules/test_check_url_shape.py`.
   - Files: `src/awesome_list/rules/check_url_shape.py`.
 
-- [ ] T11 `check_tag_vocabulary` and `check_grouping` (RED)
+- [x] T11 `check_tag_vocabulary` and `check_grouping` (RED)
   - Acceptance: flags tags outside the `awesome.toml` vocabulary, entries missing
     a type or access tag, group headings with no entries, sections with no
     entries, and bullets nested more than one level under a group.
@@ -99,7 +99,7 @@ a failing fixture. Nothing on this list needs GitHub Actions.
   - Files: `src/awesome_list/rules/check_tag_vocabulary.py`,
     `src/awesome_list/rules/check_grouping.py`.
 
-- [ ] T12 `check_toc_freshness` (RED)
+- [x] T12 `check_toc_freshness` (RED)
   - Acceptance: flags a missing Contents section, a section missing from the
     TOC, an extra TOC line, wrong order, a stale anchor, more than one nesting
     level, and any `Contributing` or `Footnotes` line.
@@ -132,14 +132,14 @@ a failing fixture. Nothing on this list needs GitHub Actions.
 
 ## Phase 4: TOC and CLI
 
-- [ ] T16 `sync_contents` (RED)
+- [x] T16 `sync_contents` (RED)
   - Acceptance: renders the Contents list from headings, rewrites it in place
     while leaving the rest of the file byte-identical, and is idempotent.
   - Verify: `make test -- tests/unit/toc/`.
   - Files: `src/awesome_list/toc/render_contents.py`,
     `src/awesome_list/toc/sync_contents.py`.
 
-- [ ] T17 `list-check` and `toc` CLI
+- [x] T17 `list-check` and `toc` CLI
   - Acceptance: `make list-check` takes `--readme`, `--config`, and
     `--report-only`, exits non-zero on violations unless report-only, and prints
     rule, file, line, and fix. `make toc-check` reports drift without writing.
@@ -147,6 +147,25 @@ a failing fixture. Nothing on this list needs GitHub Actions.
     `make test -- tests/unit/cli/`.
   - Files: `src/awesome_list/cli/run_list_check.py`,
     `src/awesome_list/cli/run_toc.py`.
+
+- [x] T17b GitHub stats on every GitHub link (RED)
+  - Acceptance: `github_repo_slug` reads `owner/repo` from a repo URL and returns
+    nothing for a profile, an issue, a pull request, a gist, or a non-GitHub
+    host; `format_stats` prints `★ 1,234 stars, last push 2026-09-20.` and
+    `★ 87 stars, archived 2024-05-01.`; `apply_github_stats` adds or replaces one
+    trailing segment, is idempotent, and leaves every other line byte-identical;
+    `check_github_stats` fails a GitHub entry with no stats segment, warns once when
+    the snapshot is older than `max_age_days`, and returns nothing when
+    `github.stats = false`; `make stats` writes `github-stats.json` and the readme
+    and fails soft when `gh` is unreachable; `make stats-check` verifies both with
+    no network at all.
+  - Verify: `make test -- tests/unit/github/ tests/unit/cli/test_stats_cli.py`,
+    then `make stats-check`.
+  - Files: `src/awesome_list/github/github_stats.py`,
+    `src/awesome_list/github/fetch_repo_stats.py`,
+    `src/awesome_list/github/stats_snapshot.py`,
+    `src/awesome_list/rules/check_github_stats.py`,
+    `src/awesome_list/cli/run_stats.py`.
 
 ## Phase 5: exports
 
@@ -316,7 +335,7 @@ a failing fixture. Nothing on this list needs GitHub Actions.
   - Files: `src/awesome_list/cli/run_compliance_audit.py`,
     `src/awesome_list/submission/audit_bot_trailers.py`.
 
-- [ ] T38 Rule parity with awesome-lint
+- [x] T38 Rule parity with awesome-lint
   - Acceptance: awesome-lint runs over every fixture readme; a fixture our rules
     accept but the linter rejects fails the gate; deliberate strictness is
     recorded with its reason.

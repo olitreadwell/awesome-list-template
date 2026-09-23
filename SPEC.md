@@ -73,6 +73,16 @@ since. These are settled unless the maintainer says otherwise.
 10. **Generated output is published, not committed to `main`.**
     `jobs/publish.sh` commits `site/` to a `gh-pages` branch through a git
     worktree.
+11. **Every GitHub link carries stars and last activity.** `[github] stats = true`
+    is the default in `awesome.toml`, so a reader sees `★ 4,210 stars, last
+push 2024-05-06.` on the entry rather than clicking to find out. `make
+stats` fetches stars, last push, and archived state through `gh api`, caches
+    them in `github-stats.json`, then adds or replaces one trailing segment per
+    entry. `make list-check` fails an entry that links a repository with no
+    stats segment, points at `make stats` as the fix, and warns once when the
+    snapshot is older than `max_age_days`. Only `make stats` touches the
+    network: `make stats-check` and `make list-check` read the cached snapshot,
+    so a laptop with no connection still runs the whole gate.
 
 ## Non-goals
 
@@ -153,7 +163,9 @@ make check               # the full gate, see below
 make check-fast          # pre-commit subset, under 10 seconds
 make toc                 # rewrite the Contents section
 make toc-check           # fail if the Contents section is stale
-make list-check          # grammar, duplicates, tags, TOC, grouping
+make list-check          # grammar, duplicates, tags, TOC, grouping, GitHub stats
+make stats               # fetch stars and last push dates, write the snapshot
+make stats-check         # fail when the snapshot or an entry is out of date
 make export              # data.json, data.csv, feed.xml, sitemap.xml
 make site                # build site/ , only when site.enabled = true
 make submission-check    # awesome.re readiness report
@@ -170,9 +182,9 @@ make repo-setup          # gh api, dry-run by default
 ```
 
 `make check` runs, in order: `ruff check`, `ruff format --check`, `mypy`,
-`prettier --check`, `toc-check`, `list-check`, `awesome-lint`, `pytest` with the
-guardrail and parity suites, `compliance-audit`, `export`, and, when
-`site.enabled` is true, `site`, `pytest -m e2e`, and Lighthouse. It is the single
+`prettier --check`, `toc-check`, `list-check`, `stats-check`, `awesome-lint`,
+`pytest` with the guardrail and parity suites, `compliance-audit`, `export`, and,
+when `site.enabled` is true, `site`, `pytest -m e2e`, and Lighthouse. It is the single
 gate, and the pre-push hook, the nightly audit job, and a human all call it.
 
 `make check-fast` is the pre-commit subset: `ruff format --check` on changed
@@ -186,7 +198,8 @@ It stays under 10 seconds so nobody is tempted to skip it.
 ```
 readme.md                     the list; only source of truth for entries
 awesome.toml                  list name, repo slug, badge, sections, tag vocab,
-                              site and links policy
+                              site, links, and github stats policy
+github-stats.json             stars and last push per repo, written by make stats
 contributing.md               contributor guide, linked from readme Footnotes
 code-of-conduct.md            Contributor Covenant 2.1
 license                       CC0-1.0 text
@@ -202,6 +215,8 @@ src/awesome_list/
                               export_atom_feed.py, export_sitemap.py
   site/                       build_static_site.py, render_index_html.py
   submission/                 check_awesome_re_readiness.py, awesome_re_rules.py
+  github/                     github_repo_slug, format_stats, apply_github_stats,
+                              fetch_repo_stats.py, stats_snapshot.py
   links/                      extract_added_urls.py, plan_dead_entry_fix.py,
                               archive_page_locally.py
   slug/                       github_slug.py, matching github-slugger output
@@ -301,8 +316,8 @@ REFACTOR  rename, extract, keep the suite green
 
 Consequences that shape the design:
 
-- Every check runs offline except `awesome-lint`, lychee, and, when the site is
-  on, Pagefind's install. Each degrades with an explicit message instead of a
+- Every check runs offline except `awesome-lint`, lychee, `make stats`, and,
+  when the site is on, Pagefind's install. Each degrades with an explicit message instead of a
   hard failure when the network is unavailable.
 - The pre-push hook is the real gate, so its runtime matters. With the site off
   there is no E2E and no Lighthouse, and the suite is test-dominated and fast.
@@ -317,19 +332,20 @@ Consequences that shape the design:
 
 ### What gets which test
 
-| Concern                                  | Level                                                  | Where                               |
-| ---------------------------------------- | ------------------------------------------------------ | ----------------------------------- |
-| Parser (tokens to model)                 | unit, small                                            | `tests/unit/parse/`                 |
-| One rule each                            | unit, small, table-driven                              | `tests/unit/rules/`                 |
-| GitHub slug parity with `github-slugger` | unit plus parity                                       | `tests/unit/slug/`, `tests/parity/` |
-| TOC render and sync                      | unit plus idempotence                                  | `tests/unit/toc/`                   |
-| Exports                                  | unit plus contract against `schemas/`                  | `tests/unit/export/`                |
-| Site HTML                                | golden file, only when the site is on                  | `tests/golden/`                     |
-| CLI wiring, config loading               | unit with a temp dir                                   | `tests/unit/cli/`                   |
-| Readiness checker                        | unit per requirement, one end to end on a fixture repo | `tests/unit/submission/`            |
-| Link diff and archive planning           | unit over fixture diffs and recorded responses         | `tests/unit/links/`                 |
-| Job scripts                              | integration, `bash -n` plus a dry run                  | `tests/integration/jobs/`           |
-| Built site in a browser                  | E2E, medium, site on only                              | `e2e/`                              |
+| Concern                                  | Level                                                  | Where                                   |
+| ---------------------------------------- | ------------------------------------------------------ | --------------------------------------- |
+| Parser (tokens to model)                 | unit, small                                            | `tests/unit/parse/`                     |
+| One rule each                            | unit, small, table-driven                              | `tests/unit/rules/`                     |
+| GitHub slug parity with `github-slugger` | unit plus parity                                       | `tests/unit/slug/`, `tests/parity/`     |
+| TOC render and sync                      | unit plus idempotence                                  | `tests/unit/toc/`                       |
+| Exports                                  | unit plus contract against `schemas/`                  | `tests/unit/export/`                    |
+| Site HTML                                | golden file, only when the site is on                  | `tests/golden/`                         |
+| CLI wiring, config loading               | unit with a temp dir                                   | `tests/unit/cli/`                       |
+| GitHub stats fetch, format, apply        | unit with an injected runner, never the network        | `tests/unit/github/`, `tests/unit/cli/` |
+| Readiness checker                        | unit per requirement, one end to end on a fixture repo | `tests/unit/submission/`                |
+| Link diff and archive planning           | unit over fixture diffs and recorded responses         | `tests/unit/links/`                     |
+| Job scripts                              | integration, `bash -n` plus a dry run                  | `tests/integration/jobs/`               |
+| Built site in a browser                  | E2E, medium, site on only                              | `e2e/`                                  |
 
 ### Test rules
 
@@ -375,6 +391,10 @@ fails the gate instead of shipping.
   `ci/check.sh` or `jobs/`.
 - `prepush_runs_full_check`: the pre-push hook invokes `make check`, parsed from
   the hook file.
+- `only_toc_and_stats_write_the_readme`: no other CLI module writes `readme.md`,
+  and `make stats-check` is in the gate and never shells out to `gh`.
+- `network_calls_live_in_one_module`: `subprocess` appears in
+  `github/fetch_repo_stats.py` and `cli/run_hooks_install.py` and nowhere else.
 - `prettier_preserves_prose`: assert the config plus a paragraph round-trip.
 - `no_ci_badge_or_list_topics`: the template repo has neither the badge nor the
   `awesome` and `awesome-list` topics.
@@ -550,6 +570,13 @@ changes nothing about `make check`, `make jobs-due`, or publishing.
 S17. With `links.archive = "off"`, a dead entry produces a report and nothing
 else. With `"local"`, the page is saved under `archive/`, the entry moves to
 `legacy.md`, and the main list gains no archive URL.
+S19. With `[github] stats = true`, an entry that links a repository without a
+stats segment fails `make list-check` and names `make stats` as the fix. `make
+stats` adds the segment and writes `github-stats.json`, `make stats-check`
+passes with no network, a snapshot older than `max_age_days` warns instead of
+failing, and `make stats` run while `gh` is unreachable leaves both files byte
+identical.
+
 S18. `awesome-kiwi-data` and `awesome-olitreadwell` both pass
 `make list-check` after migration, with their existing entries intact
 except for violations recorded in `docs/migration.md`.

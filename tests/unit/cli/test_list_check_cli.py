@@ -111,3 +111,84 @@ def test_missing_config_falls_back_to_readme(
         )
         == 0
     )
+
+
+GITHUB_CONFIG = """\
+name = "Awesome Github"
+repo_slug = "awesome-github"
+sections = ["Tools"]
+
+[github]
+stats = true
+max_age_days = 36500
+snapshot = "github-stats.json"
+"""
+
+
+def github_list(tmp_path: Path, fixture_readme: Callable[[str], str]) -> Path:
+    """Write a list whose GitHub entry is missing its stats segment."""
+    (tmp_path / "awesome.toml").write_text(GITHUB_CONFIG, encoding="utf-8")
+    (tmp_path / "github-stats.json").write_text(
+        fixture_readme("github-stats.json"), encoding="utf-8"
+    )
+    text = fixture_readme("github.md").replace(
+        " - ★ 4,210 stars, last push 2024-05-06.", ""
+    )
+    (tmp_path / "readme.md").write_text(text, encoding="utf-8")
+    return tmp_path
+
+
+def test_missing_github_stats_fails_the_gate(
+    tmp_path: Path,
+    fixture_readme: Callable[[str], str],
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    root = github_list(tmp_path, fixture_readme)
+
+    code = run_list_check.main(["--config", str(root / "awesome.toml")])
+
+    assert code == 1
+    out = capsys.readouterr().out
+    assert "github-stats" in out
+    assert "make stats" in out
+
+
+def test_github_stats_pass_when_the_segment_matches(
+    tmp_path: Path,
+    fixture_readme: Callable[[str], str],
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    root = github_list(tmp_path, fixture_readme)
+    (root / "readme.md").write_text(fixture_readme("github.md"), encoding="utf-8")
+
+    code = run_list_check.main(["--config", str(root / "awesome.toml")])
+
+    assert code == 0
+    assert "no violations" in capsys.readouterr().out
+
+
+def test_github_stats_off_is_not_checked(
+    tmp_path: Path,
+    fixture_readme: Callable[[str], str],
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    root = github_list(tmp_path, fixture_readme)
+    (root / "awesome.toml").write_text(
+        GITHUB_CONFIG.replace("stats = true", "stats = false"), encoding="utf-8"
+    )
+    (root / "github-stats.json").unlink()
+
+    assert run_list_check.main(["--config", str(root / "awesome.toml")]) == 0
+    assert "no violations" in capsys.readouterr().out
+
+
+def test_a_missing_snapshot_tells_you_to_run_make_stats(
+    tmp_path: Path,
+    fixture_readme: Callable[[str], str],
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    root = github_list(tmp_path, fixture_readme)
+    (root / "github-stats.json").unlink()
+
+    assert run_list_check.main(["--config", str(root / "awesome.toml")]) == 1
+    assert "make stats" in capsys.readouterr().out

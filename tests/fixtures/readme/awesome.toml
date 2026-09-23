@@ -29,3 +29,11 @@ Paid = "\u25cf"
 [tags.status]
 Legacy = "\u27f3"
 Archived = "\u25a3"
+
+[github]
+# The engine checks every GitHub entry for stars and a last-push date. The
+# fixture pins a snapshot, and a ceiling high enough that the offline gate never
+# trips on age, so the check stays deterministic without the network.
+stats = true
+max_age_days = 36500
+snapshot = "github-stats.json"

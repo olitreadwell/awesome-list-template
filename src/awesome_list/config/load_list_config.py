@@ -8,6 +8,7 @@ from typing import Any
 
 from awesome_list.config.list_config import (
     ARCHIVE_MODES,
+    GithubConfig,
     LinksConfig,
     ListConfig,
     SiteConfig,
@@ -22,9 +23,11 @@ TOP_LEVEL_KEYS = {
     "sections",
     "site",
     "links",
+    "github",
     "tags",
 }
 LINKS_KEYS = {"archive", "exclude", "allowlist", "archive_limits"}
+GITHUB_KEYS = {"stats", "max_age_days", "snapshot"}
 LIMIT_KEYS = {"per_file_bytes", "total_bytes"}
 TAG_AXES = ("type", "access", "status")
 
@@ -62,6 +65,7 @@ def load_list_config(path: Path) -> ListConfig:
         badge=_as_str(raw.get("badge", "default"), "badge"),
         site=_load_site(raw.get("site", {})),
         links=_load_links(raw.get("links", {})),
+        github=_load_github(raw.get("github", {})),
         tags=_load_tags(raw.get("tags", {})),
         source_path=path,
     )
@@ -111,6 +115,24 @@ def _load_links(raw: Any) -> LinksConfig:
         total_bytes=_as_int(
             limits.get("total_bytes", 50_000_000), "links.archive_limits.total_bytes"
         ),
+    )
+
+
+def _load_github(raw: Any) -> GithubConfig:
+    if not isinstance(raw, dict):
+        raise ListConfigError("github must be a table")
+    unknown = sorted(set(raw) - GITHUB_KEYS)
+    if unknown:
+        raise ListConfigError(f"unknown key: github.{unknown[0]}")
+
+    stats = raw.get("stats", True)
+    if not isinstance(stats, bool):
+        raise ListConfigError("github.stats must be true or false")
+
+    return GithubConfig(
+        stats=stats,
+        max_age_days=_as_int(raw.get("max_age_days", 14), "github.max_age_days"),
+        snapshot=_as_str(raw.get("snapshot", "github-stats.json"), "github.snapshot"),
     )
 
 

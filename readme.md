@@ -20,7 +20,9 @@ make hooks-install
 ## Commands
 
 ```bash
-make list-check    # entry grammar, tags, duplicates, URLs, TOC freshness
+make list-check    # entry grammar, tags, duplicates, URLs, TOC freshness, stats
+make stats         # fetch stars and last push dates for every GitHub link
+make stats-check   # fail when the snapshot or the readme is behind
 make toc           # rewrite the Contents section
 make toc-check     # fail when the Contents section is stale
 make export        # data.json, data.csv, feed.xml, sitemap.xml
@@ -52,11 +54,15 @@ make check-fast    # the pre-commit subset
 - The Contents section is first, one level deep at most, and never lists
   Contributing or Footnotes.
 - No archived or deprecated entry in the main list. Those live in `legacy.md`.
+- Every entry that links a GitHub repository shows stars and a last-push date,
+  for example `★ 4,210 stars, last push 2024-05-06.`, refreshed by `make stats`
+  and checked offline by `make list-check`.
 
 ## Layout
 
 - `src/awesome_list/parse/` builds the model from the readme.
 - `src/awesome_list/rules/` holds one rule per module.
+- `src/awesome_list/github/` formats repo stats and fetches them through `gh`.
 - `src/awesome_list/toc/` renders and syncs the Contents section.
 - `src/awesome_list/export/` writes data.json, data.csv, the feed, and the sitemap.
 - `src/awesome_list/submission/` holds the pinned awesome.re requirements.
