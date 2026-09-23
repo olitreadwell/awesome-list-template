@@ -272,6 +272,9 @@ def _split_link(inline: Token) -> tuple[str | None, str | None, str]:
                 parts.append(children[index].content)
                 index += 1
             name = "".join(parts).strip()
+            # Anything before the link belongs to the sentence that introduces
+            # it, not to the description of the thing being linked.
+            tail = []
         elif child.type == "text":
             tail.append(child.content)
         elif child.type == "code_inline":

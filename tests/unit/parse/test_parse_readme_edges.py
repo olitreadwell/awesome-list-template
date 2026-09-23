@@ -200,3 +200,16 @@ def test_a_bullet_two_levels_below_an_entry_is_also_nested_under_it() -> None:
 
     assert depths["Lecture Videos"] is True
     assert depths["Spring 2015"] is True
+
+
+def test_text_before_the_link_is_not_part_of_the_description() -> None:
+    """`- See [X](url) - what it is` describes X, and says what it is."""
+    document = parse_readme(
+        "# Awesome X\n\n## Tools\n\n"
+        "- See [Awesome D3](https://d3.example.com/) - A list of D3 resources.\n"
+    )
+    entry = document.entries[0]
+
+    assert entry.name == "Awesome D3"
+    assert entry.has_separator is True
+    assert entry.description.startswith("A list of D3")
