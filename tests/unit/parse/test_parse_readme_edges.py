@@ -186,3 +186,17 @@ def test_badge_only_heading_is_not_a_section() -> None:
 
     assert [section.name for section in document.sections] == ["Tools"]
     assert [entry.name for entry in document.entries] == ["First", "Second"]
+
+
+def test_a_bullet_two_levels_below_an_entry_is_also_nested_under_it() -> None:
+    """A detail bullet can carry its own detail bullets."""
+    document = parse_readme(
+        "# Awesome X\n\n## Tools\n\n"
+        "- [Piped](https://piped.example.com/) - An alternative front end.\n"
+        "    - [Lecture Videos](https://videos.example.com/)\n"
+        "        - [Spring 2015](https://videos.example.com/2015)\n"
+    )
+    depths = {entry.name: entry.nested_under_entry for entry in document.entries}
+
+    assert depths["Lecture Videos"] is True
+    assert depths["Spring 2015"] is True

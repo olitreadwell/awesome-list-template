@@ -173,7 +173,10 @@ def _build_section(
             item,
             vocabulary,
             depth=item.depth,
-            nested_under_entry=item.depth == 2 and last_kind == "entry",
+            # Anything below a top-level entry hangs off that entry, however
+            # deep it goes: a course's lecture videos can carry their own
+            # per-year links.
+            nested_under_entry=item.depth >= 2 and last_kind == "entry",
             raw_lines=raw_lines,
         )
         if entry is not None:
