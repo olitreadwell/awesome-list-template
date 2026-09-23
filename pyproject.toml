@@ -49,6 +49,11 @@ files = ["src", "tests"]
 pretty = true
 show_error_codes = true
 
+[tool.codespell]
+# "ons" is the Office for National Statistics abbreviation, and the tests use it
+# to prove that short keywords match whole words only.
+ignore-words-list = "ons"
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-q --strict-markers"

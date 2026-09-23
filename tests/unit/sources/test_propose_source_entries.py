@@ -92,6 +92,23 @@ def test_repo_stats_ride_along() -> None:
     assert repo.stats == stats["owner/repo"]
 
 
+def test_keywords_match_whole_words_only() -> None:
+    entries = (
+        SourceEntry(
+            name="Icon Horse",
+            url="https://icon.horse",
+            description="icons and options for a government site",
+            section="Art & Design",
+            line=6,
+        ),
+    )
+
+    assert propose_source_entries(parse_readme(TARGET), entries, ["ons"]) == ()
+    assert (
+        len(propose_source_entries(parse_readme(TARGET), entries, ["government"])) == 1
+    )
+
+
 def test_report_says_nothing_was_written() -> None:
     candidates = propose_source_entries(parse_readme(TARGET), ENTRIES, ["new zealand"])
     report = render_source_report(

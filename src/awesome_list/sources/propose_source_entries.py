@@ -8,6 +8,7 @@ the list demands of every GitHub link.
 
 from __future__ import annotations
 
+import re
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 
@@ -41,7 +42,7 @@ def propose_source_entries(
         if normalize_url(entry.url) in known:
             continue
         haystack = f"{entry.name} {entry.description} {entry.section}".lower()
-        matched = tuple(keyword for keyword in wanted if keyword in haystack)
+        matched = tuple(keyword for keyword in wanted if _matches(haystack, keyword))
         if wanted and not matched:
             continue
         slug = github_repo_slug(entry.url)
@@ -54,6 +55,12 @@ def propose_source_entries(
         )
 
     return tuple(candidates)
+
+
+def _matches(haystack: str, keyword: str) -> bool:
+    """Match a whole word, so "ons" never matches "icons" or "options"."""
+    pattern = rf"\b{re.escape(keyword)}\b"
+    return re.search(pattern, haystack) is not None
 
 
 def render_source_report(
