@@ -49,6 +49,7 @@ def run_rules(
             github_snapshot,
             github_stats_max_age_days,
             enabled=github_stats_enabled,
+            allowed_urls=allowed,
         )
     )
 

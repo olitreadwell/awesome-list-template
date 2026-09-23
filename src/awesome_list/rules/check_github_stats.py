@@ -23,6 +23,7 @@ def check_github_stats(
     *,
     enabled: bool = True,
     today: date | None = None,
+    allowed_urls: frozenset[str] = frozenset(),
 ) -> tuple[RuleViolation, ...]:
     """Return every missing or stale stats segment.
 
@@ -36,6 +37,10 @@ def check_github_stats(
     linked = [
         (entry.line, entry.name, slug)
         for entry in document.entries
+        # A github.com URL is not always a repository. The readme org
+        # publishes guides under github.com/readme, and no stars exist for
+        # them. links.allowlist is where a list records that.
+        if entry.url.strip() not in allowed_urls
         if (slug := github_repo_slug(entry.url)) is not None
     ]
     if not linked:
