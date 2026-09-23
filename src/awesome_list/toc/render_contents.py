@@ -17,7 +17,10 @@ DENIED_TOC_SECTIONS = frozenset(
     }
 )
 
-MAX_TOC_DEPTH = 3
+# Four, not three: a list that groups extensions under a level three heading
+# nests one level deeper, and dropping those lines would lose links a reader
+# uses. awesome-lint accepts a Contents section of any depth.
+MAX_TOC_DEPTH = 4
 
 
 def render_contents(document: ListDocument) -> tuple[str, ...]:
