@@ -74,6 +74,7 @@ def parse_readme(
     current: _SectionDraft | None = None
     list_depth = 0
     pending: _ItemDraft | None = None
+    section_level = _section_level(tokens)
 
     index = 0
     while index < len(tokens):
@@ -89,7 +90,7 @@ def parse_readme(
                 )
             if level == 1 and not title:
                 title = heading_text
-            elif level == 2:
+            elif level >= 2 and heading_text and level == section_level:
                 current = _SectionDraft(name=heading_text, line=_line_of(token))
                 sections.append(current)
             index += 3
@@ -281,15 +282,56 @@ def _has_link(item: _ItemDraft) -> bool:
     return any(child.type == "link_open" for child in (item.inline.children or []))
 
 
+def _section_level(tokens: list[Token]) -> int:
+    """Return the heading depth this readme uses for sections.
+
+    Lists disagree about how deep a section sits: most use ``##``, some group
+    everything with ``###`` and have no ``##`` section at all. The shallowest
+    heading below the title that is not itself Contents, Footnotes, or an
+    unlabelled badge sets the level, falling back to ``##`` when there is none.
+    """
+    levels = []
+    for index, token in enumerate(tokens):
+        if token.type != "heading_open":
+            continue
+        inline = tokens[index + 1] if index + 1 < len(tokens) else None
+        level = int(token.tag[1]) if token.tag.startswith("h") else 0
+        name = _heading_text(inline)
+        if level < 2 or not name:
+            continue
+        if name.strip().lower() in SKIPPED_SECTIONS:
+            continue
+        levels.append(level)
+    return min(levels) if levels else 2
+
+
 def _heading_text(inline: Token | None) -> str:
+    """Return a heading's own text, with badges and trailing links dropped.
+
+    A heading whose whole content is one link (``## [git-extras](url)``) has no
+    text of its own, so the link's text becomes the name instead of nothing.
+    """
     if inline is None:
         return ""
+    children = list(inline.children or [])
     parts: list[str] = []
-    for child in inline.children or []:
-        if child.type in {"link_open", "image", "html_inline"}:
+    index = 0
+    while index < len(children):
+        child = children[index]
+        if child.type in {"image", "html_inline"}:
+            break
+        if child.type == "link_open":
+            if parts:
+                break
+            index += 1
+            while index < len(children) and children[index].type != "link_close":
+                if children[index].type in {"text", "code_inline"}:
+                    parts.append(children[index].content)
+                index += 1
             break
         if child.type in {"text", "code_inline"}:
             parts.append(child.content)
+        index += 1
     return "".join(parts).strip()
 
 
