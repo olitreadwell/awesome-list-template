@@ -12,9 +12,18 @@ RULE = "url-shape"
 ALLOWED_SCHEMES = frozenset({"http", "https", "mailto"})
 
 
-def check_url_shape(entry: ListEntry) -> tuple[RuleViolation, ...]:
-    """Return every URL problem in one entry."""
+def check_url_shape(
+    entry: ListEntry, allowed_urls: frozenset[str] = frozenset()
+) -> tuple[RuleViolation, ...]:
+    """Return every URL problem in one entry.
+
+    ``allowed_urls`` holds the URLs from ``links.allowlist``. They are skipped
+    entirely, so a site that only serves plain http on purpose can be recorded
+    in one place instead of turning the gate red forever.
+    """
     url = entry.url.strip()
+    if url in allowed_urls:
+        return ()
     violations: list[RuleViolation] = []
 
     if not url:

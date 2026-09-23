@@ -9,12 +9,20 @@ from awesome_list.rules.rule_violation import RuleViolation
 RULE = "duplicate-urls"
 
 
-def check_duplicate_urls(document: ListDocument) -> tuple[RuleViolation, ...]:
-    """Flag every entry that repeats a URL an earlier entry already uses."""
+def check_duplicate_urls(
+    document: ListDocument, allowed_urls: frozenset[str] = frozenset()
+) -> tuple[RuleViolation, ...]:
+    """Flag every entry that repeats a URL an earlier entry already uses.
+
+    An allowlisted URL is skipped, because a repeated URL is deliberate
+    sometimes and the allowlist is where a list says so.
+    """
     first_seen: dict[str, str] = {}
     violations: list[RuleViolation] = []
 
     for entry in document.entries:
+        if entry.url.strip() in allowed_urls:
+            continue
         key = normalize_url(entry.url)
         if not key:
             continue

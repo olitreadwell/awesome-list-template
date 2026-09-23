@@ -28,16 +28,18 @@ def run_rules(
     github_snapshot: StatsSnapshot | None = None,
     github_stats_enabled: bool = False,
     github_stats_max_age_days: int = 14,
+    allowed_urls: tuple[str, ...] = (),
 ) -> tuple[RuleViolation, ...]:
     """Return every violation in the document, ordered by line."""
     violations: list[RuleViolation] = []
+    allowed = frozenset(allowed_urls)
 
     for entry in document.entries:
         violations.extend(check_entry_grammar(entry))
-        violations.extend(check_url_shape(entry))
+        violations.extend(check_url_shape(entry, allowed))
         violations.extend(check_tag_vocabulary(entry, vocabulary))
 
-    violations.extend(check_duplicate_urls(document))
+    violations.extend(check_duplicate_urls(document, allowed))
     violations.extend(check_bare_urls(document))
     violations.extend(check_grouping(document, entry_sections))
     violations.extend(check_toc_freshness(document, text))
