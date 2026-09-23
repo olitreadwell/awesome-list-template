@@ -70,7 +70,7 @@ def load_list_config(path: Path) -> ListConfig:
         links=_load_links(raw.get("links", {})),
         github=_load_github(raw.get("github", {})),
         sources=_load_sources(raw.get("sources", {})),
-        tags=_load_tags(raw.get("tags", {})),
+        tags=_load_tags(raw.get("tags", {}), present="tags" in raw),
         source_path=path,
     )
 
@@ -156,7 +156,7 @@ def _load_sources(raw: Any) -> SourcesConfig:
     )
 
 
-def _load_tags(raw: Any) -> TagVocabulary:
+def _load_tags(raw: Any, *, present: bool = False) -> TagVocabulary:
     if not isinstance(raw, dict):
         raise ListConfigError("tags must be a table")
     unknown = sorted(set(raw) - set(TAG_AXES))
@@ -177,6 +177,10 @@ def _load_tags(raw: Any) -> TagVocabulary:
             )
         pairs[axis] = tuple(entries)
     if not any(pairs.values()):
+        # An explicit [tags] table with no axes is how a list says it does not
+        # use tags at all. Leaving the section out keeps the example vocabulary.
+        if present:
+            return TagVocabulary()
         return DEFAULT_TAG_VOCABULARY
     return TagVocabulary(
         type=pairs["type"], access=pairs["access"], status=pairs["status"]

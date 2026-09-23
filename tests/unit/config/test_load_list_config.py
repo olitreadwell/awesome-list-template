@@ -141,6 +141,21 @@ def test_rejects_unknown_sources_key(tmp_path: Path) -> None:
         load_list_config(write(tmp_path, body))
 
 
+def test_tags_absent_keeps_the_example_vocabulary(tmp_path: Path) -> None:
+    config = load_list_config(write(tmp_path, MINIMAL))
+
+    assert config.tags.labels_for("type")
+
+
+def test_empty_tags_table_means_no_tags(tmp_path: Path) -> None:
+    body = MINIMAL + "[tags]\n"
+
+    config = load_list_config(write(tmp_path, body))
+
+    assert config.tags.labels_for("type") == ()
+    assert config.tags.labels_for("access") == ()
+
+
 def test_rejects_unknown_github_key(tmp_path: Path) -> None:
     body = MINIMAL + "[github]\nstars = true\n"
 
