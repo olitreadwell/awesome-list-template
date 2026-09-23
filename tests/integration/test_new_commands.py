@@ -287,3 +287,34 @@ def test_links_diff_uses_an_explicit_base_ref_verbatim(capsys: object) -> None:
     )
 
     assert tried == ["v1.0.0:clean.md"]
+
+
+def test_compliance_audit_qualifies_a_bare_repo_slug(capsys: object) -> None:
+    seen: list[str] = []
+
+    def fetch(slug: str) -> dict[str, object]:
+        seen.append(slug)
+        return {"default_branch": "main", "topics": ["awesome"]}
+
+    compliance_main(
+        ["--config", CONFIG, "--slug", "owner/awesome-example"], fetch=fetch
+    )
+
+    assert seen == ["owner/awesome-example"]
+
+
+def test_compliance_audit_qualifies_the_config_slug_with_the_origin_owner(
+    capsys: object,
+) -> None:
+    seen: list[str] = []
+
+    def fetch(slug: str) -> dict[str, object]:
+        seen.append(slug)
+        return {"default_branch": "main", "topics": []}
+
+    compliance_main(["--config", CONFIG], fetch=fetch)
+
+    assert len(seen) == 1
+    owner, _, name = seen[0].partition("/")
+    assert owner
+    assert name == "awesome-example"

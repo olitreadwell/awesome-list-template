@@ -10,7 +10,7 @@ from typing import Any
 
 from awesome_list.config.load_list_config import ListConfigError, load_list_config
 from awesome_list.repo.audit_repo_settings import RepoSettings, audit_repo_settings
-from awesome_list.repo.github_repo_settings import fetch_repo_settings
+from awesome_list.repo.github_repo_settings import fetch_repo_settings, origin_remote
 
 Fetcher = Callable[[str], dict[str, Any]]
 
@@ -44,7 +44,7 @@ def main(
     except ListConfigError as error:
         raise SystemExit(f"awesome.toml: {error}") from error
 
-    slug = args.slug or config.repo_slug
+    slug = args.slug or _default_slug(config.repo_slug)
     raw = (fetch or fetch_repo_settings)(slug)
     settings = RepoSettings(
         slug=slug,
@@ -78,6 +78,23 @@ def _string_tuple(value: object) -> tuple[str, ...]:
     if not isinstance(value, list | tuple):
         return ()
     return tuple(item for item in value if isinstance(item, str))
+
+
+def _default_slug(repo_slug: str) -> str:
+    """Return owner/name.
+
+    awesome.toml carries the bare repo name, because that is what the readme
+    badge and the exports need. The API needs the owner too, so take it from
+    the origin remote when the config does not already have one.
+    """
+    if "/" in repo_slug:
+        return repo_slug
+    try:
+        remote = origin_remote()
+    except SystemExit:
+        return repo_slug
+    owner = remote.split("/", 1)[0]
+    return f"{owner}/{repo_slug}" if owner else repo_slug
 
 
 if __name__ == "__main__":
