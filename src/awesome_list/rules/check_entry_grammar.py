@@ -14,6 +14,19 @@ from awesome_list.rules.rule_violation import RuleViolation
 RULE = "entry-grammar"
 
 
+def _starts_lowercase(first_word: str) -> bool:
+    """Return whether a description starts with a word that should be capital.
+
+    A camel case word such as ``jQuery`` or ``macOS`` is spelled that way on
+    purpose, which is what awesome-lint's case allow list says too. Anything
+    else that opens with a lowercase letter is a typo.
+    """
+    first = first_word[:1]
+    if not first.isalpha() or first.isupper():
+        return False
+    return not any(character.isupper() for character in first_word[1:])
+
+
 def check_entry_grammar(entry: ListEntry) -> tuple[RuleViolation, ...]:
     """Return every grammar problem in one entry."""
     violations: list[RuleViolation] = []
@@ -66,8 +79,8 @@ def check_entry_grammar(entry: ListEntry) -> tuple[RuleViolation, ...]:
             )
         return tuple(violations)
 
-    first = entry.description[0]
-    if not entry.tags and first.isalpha() and not first.isupper():
+    first_word = entry.description.split(maxsplit=1)[0]
+    if not entry.tags and _starts_lowercase(first_word):
         violations.append(
             RuleViolation(
                 rule=RULE,

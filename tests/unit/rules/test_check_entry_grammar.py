@@ -92,3 +92,21 @@ def test_violation_carries_line_and_fix(fixture_readme: Callable[[str], str]) ->
 
     assert violation.line == entry.line
     assert violation.fix
+
+
+def test_a_camel_case_first_word_is_not_a_lowercase_start() -> None:
+    """jQuery, macOS and iOS are spelled that way on purpose."""
+    document = parse_readme(
+        "# Awesome X\n\n## Tools\n\n"
+        "- [Mapael](https://mapael.example.com/) - jQuery plugin for vector maps.\n"
+        "- [Dock](https://dock.example.com/) - macOS launcher.\n"
+        "- [Cafe](https://cafe.example.com/) - lowercase start here.\n"
+    )
+    messages = {
+        entry.name: [v.message for v in check_entry_grammar(entry)]
+        for entry in document.entries
+    }
+
+    assert messages["Mapael"] == []
+    assert messages["Dock"] == []
+    assert any("lowercase" in m for m in messages["Cafe"])
