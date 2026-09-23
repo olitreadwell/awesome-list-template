@@ -5,6 +5,8 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 
 WANTED_TOPICS = ("awesome", "awesome-list", "curated-list")
+# GitHub reports these when it cannot match the file to a known licence.
+UNRECOGNISED_LICENSES = frozenset({"NOASSERTION", "Other"})
 WANTED_BRANCH = "main"
 
 
@@ -97,10 +99,12 @@ def _archived(settings: RepoSettings) -> SettingsFinding:
 
 
 def _license(settings: RepoSettings) -> SettingsFinding:
-    ok = bool(settings.license_name)
+    name = settings.license_name or ""
+    ok = bool(name) and name not in UNRECOGNISED_LICENSES
     return SettingsFinding(
         "license",
         ok,
-        settings.license_name or "no license file detected",
-        fix="add a license file; a list without one cannot be reused",
+        name or "no license file detected",
+        fix="use a standard licence text, such as the full CC0 legal code;"
+        " GitHub cannot tell what a stub is",
     )

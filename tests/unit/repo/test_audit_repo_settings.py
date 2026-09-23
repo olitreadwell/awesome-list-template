@@ -55,3 +55,10 @@ def test_a_repo_without_a_license_is_drift() -> None:
     drift = audit_repo_settings(_settings(license_name=None)).drift
 
     assert [finding.name for finding in drift] == ["license"]
+
+
+def test_a_license_github_cannot_recognise_is_drift() -> None:
+    drift = audit_repo_settings(_settings(license_name="NOASSERTION")).drift
+
+    assert [finding.name for finding in drift] == ["license"]
+    assert "standard licence text" in drift[0].fix
