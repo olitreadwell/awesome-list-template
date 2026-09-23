@@ -58,15 +58,8 @@ def test_repeated_headings_get_suffixes() -> None:
     assert "- [Tools](#tools-1)" in lines
 
 
-def test_level_four_headings_stay_in_the_contents() -> None:
-    text = WITH_SUBHEADINGS.replace("### Sub Tools", "#### Sub Tools")
-    lines = render_contents(parse_readme(text))
-
-    assert "        - [Sub Tools](#sub-tools)" in lines
-
-
-def test_headings_below_level_four_are_skipped() -> None:
-    text = WITH_SUBHEADINGS.replace("### Sub Tools", "##### Sub Sub Tools")
+def test_headings_below_level_three_are_skipped() -> None:
+    text = WITH_SUBHEADINGS.replace("### Sub Tools", "#### Sub Sub Tools")
     lines = render_contents(parse_readme(text))
 
     assert all("Sub Sub Tools" not in line for line in lines)

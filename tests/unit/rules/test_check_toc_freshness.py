@@ -79,6 +79,18 @@ def test_a_nested_heading_in_the_contents_is_not_an_extra_line() -> None:
     assert violations == ()
 
 
+def test_a_line_nested_too_deep_is_reported() -> None:
+    text = NESTED.replace(
+        "    - [Sub Tools](#sub-tools)", "        - [Sub Tools](#sub-tools)"
+    )
+
+    messages = [
+        violation.message for violation in check_toc_freshness(parse_readme(text), text)
+    ]
+
+    assert messages == ["Sub Tools is nested deeper than the Contents section allows"]
+
+
 def test_a_nested_heading_missing_from_the_contents_is_reported() -> None:
     text = NESTED.replace("    - [Sub Tools](#sub-tools)\n", "")
 

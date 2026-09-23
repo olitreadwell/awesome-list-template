@@ -32,7 +32,9 @@ def check_toc_freshness(document: ListDocument, text: str) -> tuple[RuleViolatio
 
     # Compare against what render_contents would write, so a nested heading in
     # the readme is not reported as missing from its own table of contents.
-    expected = [_entry_name(line) for line in render_contents(document)]
+    rendered = render_contents(document)
+    expected = [_entry_name(line) for line in rendered]
+    expected_raw = {_entry_name(line): line.rstrip() for line in rendered}
     known = {heading.text.strip() for heading in document.headings if heading.level > 1}
     violations: list[RuleViolation] = []
 
@@ -59,8 +61,35 @@ def check_toc_freshness(document: ListDocument, text: str) -> tuple[RuleViolatio
                 )
             )
 
-    for line_number, name in zip(range(start + 1, end + 1), listed, strict=False):
-        if name in expected or name.lower() in DENIED_TOC_SECTIONS or name in known:
+    for line_number, name, raw in zip(
+        range(start + 1, end + 1), listed, lines[start:end], strict=False
+    ):
+        if name.lower() in DENIED_TOC_SECTIONS:
+            continue
+        if name in expected:
+            if raw.rstrip() != expected_raw[name]:
+                violations.append(
+                    RuleViolation(
+                        rule=RULE,
+                        line=line_number,
+                        message=(
+                            f"{name} is nested deeper than the Contents section allows"
+                        ),
+                        fix="run make toc to regenerate the Contents section;"
+                        " awesome-lint fails a nested list deeper than two levels",
+                    )
+                )
+            continue
+        if name in known:
+            violations.append(
+                RuleViolation(
+                    rule=RULE,
+                    line=line_number,
+                    message=f"{name} is nested deeper than the Contents section allows",
+                    fix="run make toc to regenerate the Contents section;"
+                    " awesome-lint fails a nested list deeper than two levels",
+                )
+            )
             continue
         violations.append(
             RuleViolation(
