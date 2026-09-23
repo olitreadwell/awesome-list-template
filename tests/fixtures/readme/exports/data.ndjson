@@ -1,5 +1,5 @@
-{"section": "Start here", "group": "", "name": "Example Portal", "url": "https://example.govt.nz/", "description": "the catalogue of example datasets.", "tags": "Data Open", "line": 12}
-{"section": "Start here", "group": "", "name": "Example API", "url": "https://api.example.govt.nz/", "description": "programmatic access with a developer key.", "tags": "API Key", "line": 13}
-{"section": "Start here", "group": "", "name": "Tagged Only", "url": "https://tagged.example.com/", "description": ".", "tags": "Data Open", "line": 14}
-{"section": "Tools", "group": "Example Group", "name": "First Tool", "url": "https://tool.example.com/", "description": "what the first tool holds.", "tags": "Data Open", "line": 19}
-{"section": "Tools", "group": "Example Group", "name": "Second Tool", "url": "https://second.example.com/", "description": "what the second tool holds.", "tags": "Portal Login", "line": 20}
+{"section": "Start here", "group": "", "name": "Example Portal", "url": "https://example.govt.nz/", "description": "the catalogue of example datasets.", "tags": "Data Open", "stars": "", "last_push": "", "line": 12}
+{"section": "Start here", "group": "", "name": "Example API", "url": "https://api.example.govt.nz/", "description": "programmatic access with a developer key.", "tags": "API Key", "stars": "", "last_push": "", "line": 13}
+{"section": "Start here", "group": "", "name": "Tagged Only", "url": "https://tagged.example.com/", "description": ".", "tags": "Data Open", "stars": "", "last_push": "", "line": 14}
+{"section": "Tools", "group": "Example Group", "name": "First Tool", "url": "https://tool.example.com/", "description": "what the first tool holds.", "tags": "Data Open", "stars": "", "last_push": "", "line": 19}
+{"section": "Tools", "group": "Example Group", "name": "Second Tool", "url": "https://second.example.com/", "description": "what the second tool holds.", "tags": "Portal Login", "stars": "", "last_push": "", "line": 20}

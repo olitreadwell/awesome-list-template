@@ -9,13 +9,28 @@ from __future__ import annotations
 import csv
 import io
 import json
+import re
 from collections.abc import Iterable
 from typing import Any, cast
 
 from awesome_list.config.list_config import ListConfig
+from awesome_list.github.github_stats import EXISTING_STATS_TAIL
 from awesome_list.parse.readme_model import ListDocument, ListEntry
 
-COLUMNS = ("section", "group", "name", "url", "description", "tags", "line")
+COLUMNS = (
+    "section",
+    "group",
+    "name",
+    "url",
+    "description",
+    "tags",
+    "stars",
+    "last_push",
+    "line",
+)
+
+STARS = re.compile(r"★\s*([\d,]+)\s+stars")
+LAST_PUSH = re.compile(r"last push\s+(\d{4}-\d{2}-\d{2})")
 
 
 def build_export(
@@ -63,12 +78,24 @@ def to_csv(data: dict[str, object]) -> str:
 
 
 def _entry(entry: ListEntry, *, group: str | None) -> dict[str, object]:
+    """Return one entry, with the stats segment split out of the description.
+
+    The readme glues stars and the last-push date onto the end of a
+    description. A spreadsheet wants those as their own columns, and wants the
+    description without them.
+    """
+    stats = EXISTING_STATS_TAIL.search(entry.description)
+    trailer = stats.group(0) if stats else ""
+    stars = STARS.search(trailer)
+    pushed = LAST_PUSH.search(trailer)
     return {
         "name": entry.name,
         "url": entry.url,
-        "description": entry.description,
+        "description": EXISTING_STATS_TAIL.sub("", entry.description).strip(),
         "tags": [tag.label for tag in entry.tags],
         "group": group,
+        "stars": int(stars.group(1).replace(",", "")) if stars else None,
+        "last_push": pushed.group(1) if pushed else None,
         "line": entry.line,
     }
 
@@ -85,5 +112,7 @@ def _rows(data: dict[str, object]) -> Iterable[dict[str, object]]:
                 "url": entry["url"],
                 "description": entry["description"],
                 "tags": " ".join(tags),
+                "stars": entry["stars"] if entry["stars"] is not None else "",
+                "last_push": entry["last_push"] or "",
                 "line": entry["line"],
             }
