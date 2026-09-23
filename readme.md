@@ -38,7 +38,18 @@ make check-fast    # the pre-commit subset
 2. Point `awesome.toml` at the list's readme and sections.
 3. Run `make list-check --report-only` first. It reports and exits zero.
 4. Fix what it reports, then make it enforcing.
-5. Add the engine as a dependency in the list repo's `pyproject.toml`:
+5. Add the engine as a dependency in the list repo's `pyproject.toml`, or,
+   for a repo that is not Python, call one command through `uvx`:
+
+   ```bash
+   uvx --from git+https://github.com/olitreadwell/awesome-list-template \
+     awesome-list-check
+   ```
+
+   The same shape works for `awesome-list-toc`, `awesome-list-stats`, and
+   `awesome-list-sources`.
+
+6. Add the engine as a dependency in the list repo's `pyproject.toml`:
 
    ```
    awesome-list @ git+https://github.com/olitreadwell/awesome-list-template

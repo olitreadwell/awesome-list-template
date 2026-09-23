@@ -9,6 +9,14 @@ dependencies = [
     "markdown-it-py==4.2.0",
 ]
 
+# Console scripts so a repo that is not Python (the Node directories, for
+# instance) can run one command without installing the engine as a dependency.
+[project.scripts]
+awesome-list-check = "awesome_list.cli.run_list_check:main"
+awesome-list-sources = "awesome_list.cli.run_sources:main"
+awesome-list-stats = "awesome_list.cli.run_stats:main"
+awesome-list-toc = "awesome_list.cli.run_toc:main"
+
 [dependency-groups]
 dev = [
     "pytest==9.1.1",

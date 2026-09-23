@@ -36,3 +36,19 @@ def test_every_check_has_a_make_target(repo_root: Path) -> None:
     missing = [target for target in REQUIRED_TARGETS if f"\n{target}:" not in makefile]
 
     assert missing == []
+
+
+CONSOLE_SCRIPTS = (
+    "awesome-list-check",
+    "awesome-list-sources",
+    "awesome-list-stats",
+    "awesome-list-toc",
+)
+
+
+def test_cli_entry_points_have_console_scripts(repo_root: Path) -> None:
+    """A repo that is not Python runs the engine through uvx, so it needs these."""
+    pyproject = (repo_root / "pyproject.toml").read_text(encoding="utf-8")
+    missing = [script for script in CONSOLE_SCRIPTS if f"{script} = " not in pyproject]
+
+    assert missing == []
