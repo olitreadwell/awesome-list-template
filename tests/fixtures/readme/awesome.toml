@@ -1,0 +1,31 @@
+# Config for the clean fixture, so the template repo's own gate runs against a
+# list rather than against the template's readme.
+
+name = "Awesome Example"
+repo_slug = "awesome-example"
+readme = "clean.md"
+
+sections = ["Start here", "Tools"]
+
+[site]
+enabled = false
+
+[links]
+archive = "off"
+
+[tags.type]
+API = "\u21c4"
+Data = "\u25a6"
+Portal = "\u2630"
+Register = "\u2611"
+Docs = "\u00b6"
+
+[tags.access]
+Open = "\u25cb"
+Key = "\u25d1"
+Login = "\u25d5"
+Paid = "\u25cf"
+
+[tags.status]
+Legacy = "\u27f3"
+Archived = "\u25a3"

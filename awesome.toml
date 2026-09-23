@@ -1,0 +1,49 @@
+# Configuration for this awesome list. Everything the engine needs beyond
+# readme.md lives here.
+
+name = "Awesome Example"
+repo_slug = "awesome-example"
+badge = "default"
+readme = "readme.md"
+
+sections = [
+    "Start here",
+    "Tools",
+    "Data",
+    "Acknowledgements",
+]
+
+[site]
+# Off by default. Turning this on adds HTML, a search index, E2E, and
+# Lighthouse to the gate, plus a publish job that pushes the gh-pages branch.
+enabled = false
+
+[links]
+# "off" reports dead entries and does nothing else.
+# "local" saves a single file copy under archive/ and moves the entry to
+# legacy.md.
+# "wayback" asks the Internet Archive for an existing snapshot instead.
+archive = "off"
+exclude = []
+allowlist = []
+
+[links.archive_limits]
+per_file_bytes = 2000000
+total_bytes = 50000000
+
+[tags.type]
+API = "⇄"
+Data = "▦"
+Portal = "☰"
+Register = "☑"
+Docs = "¶"
+
+[tags.access]
+Open = "○"
+Key = "◑"
+Login = "◕"
+Paid = "●"
+
+[tags.status]
+Legacy = "⟳"
+Archived = "▣"

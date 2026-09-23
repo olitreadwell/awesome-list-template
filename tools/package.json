@@ -1,0 +1,11 @@
+{
+  "name": "awesome-list-tools",
+  "private": true,
+  "description": "Pinned Node tooling: the awesome gate, Markdown formatting, and the optional search index.",
+  "devDependencies": {
+    "awesome-lint": "2.3.0",
+    "prettier": "3.9.8",
+    "pagefind": "1.5.2",
+    "@lhci/cli": "0.15.1"
+  }
+}

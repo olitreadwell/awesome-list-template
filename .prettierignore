@@ -1,0 +1,11 @@
+site/
+archive/
+tools/node_modules/
+.venv/
+uv.lock
+tools/package-lock.json
+tests/fixtures/
+license
+code-of-conduct.md
+.venv/
+.state/

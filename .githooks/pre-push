@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+# The real gate. `make check` includes the guardrails and the parity suite.
+set -euo pipefail
+cd "$(git rev-parse --show-toplevel)"
+exec make check

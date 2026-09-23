@@ -1,0 +1,41 @@
+"""Run every rule over a parsed document."""
+
+from __future__ import annotations
+
+from dataclasses import replace
+
+from awesome_list.parse.readme_model import ListDocument
+from awesome_list.rules.check_duplicate_urls import check_duplicate_urls
+from awesome_list.rules.check_entry_grammar import check_entry_grammar
+from awesome_list.rules.check_grouping import check_grouping
+from awesome_list.rules.check_tag_vocabulary import check_tag_vocabulary
+from awesome_list.rules.check_toc_freshness import check_toc_freshness
+from awesome_list.rules.check_url_shape import check_url_shape
+from awesome_list.rules.rule_violation import RuleViolation
+from awesome_list.tags import TagVocabulary
+
+
+def run_rules(
+    document: ListDocument,
+    text: str,
+    vocabulary: TagVocabulary,
+    *,
+    file: str = "readme.md",
+) -> tuple[RuleViolation, ...]:
+    """Return every violation in the document, ordered by line."""
+    violations: list[RuleViolation] = []
+
+    for entry in document.entries:
+        violations.extend(check_entry_grammar(entry))
+        violations.extend(check_url_shape(entry))
+        violations.extend(check_tag_vocabulary(entry, vocabulary))
+
+    violations.extend(check_duplicate_urls(document))
+    violations.extend(check_grouping(document))
+    violations.extend(check_toc_freshness(document, text))
+
+    return tuple(
+        sorted(
+            (replace(v, file=file) for v in violations), key=lambda v: (v.line, v.rule)
+        )
+    )

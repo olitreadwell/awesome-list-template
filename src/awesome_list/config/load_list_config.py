@@ -1,0 +1,159 @@
+"""Read awesome.toml into a typed config, rejecting anything unexpected."""
+
+from __future__ import annotations
+
+import tomllib
+from pathlib import Path
+from typing import Any
+
+from awesome_list.config.list_config import (
+    ARCHIVE_MODES,
+    LinksConfig,
+    ListConfig,
+    SiteConfig,
+)
+from awesome_list.tags import DEFAULT_TAG_VOCABULARY, TagVocabulary
+
+TOP_LEVEL_KEYS = {
+    "name",
+    "repo_slug",
+    "badge",
+    "readme",
+    "sections",
+    "site",
+    "links",
+    "tags",
+}
+LINKS_KEYS = {"archive", "exclude", "allowlist", "archive_limits"}
+LIMIT_KEYS = {"per_file_bytes", "total_bytes"}
+TAG_AXES = ("type", "access", "status")
+
+
+class ListConfigError(ValueError):
+    """Raised when awesome.toml is missing something or says something odd."""
+
+
+def load_list_config(path: Path) -> ListConfig:
+    """Load and validate a config file."""
+    if not path.exists():
+        raise ListConfigError(f"cannot read config: {path} does not exist")
+    try:
+        raw = tomllib.loads(path.read_text(encoding="utf-8"))
+    except tomllib.TOMLDecodeError as error:
+        raise ListConfigError(f"cannot read config: {path}: {error}") from error
+
+    unknown = sorted(set(raw) - TOP_LEVEL_KEYS)
+    if unknown:
+        raise ListConfigError(f"unknown key: {unknown[0]}")
+
+    for key in ("name", "repo_slug", "sections"):
+        if key not in raw:
+            raise ListConfigError(f"missing required key: {key}")
+
+    sections = _string_tuple(raw["sections"], "sections")
+    if not sections:
+        raise ListConfigError("sections must not be empty")
+
+    return ListConfig(
+        name=_as_str(raw["name"], "name"),
+        repo_slug=_as_str(raw["repo_slug"], "repo_slug"),
+        sections=sections,
+        readme=_as_str(raw.get("readme", "readme.md"), "readme"),
+        badge=_as_str(raw.get("badge", "default"), "badge"),
+        site=_load_site(raw.get("site", {})),
+        links=_load_links(raw.get("links", {})),
+        tags=_load_tags(raw.get("tags", {})),
+        source_path=path,
+    )
+
+
+def _load_site(raw: Any) -> SiteConfig:
+    if not isinstance(raw, dict):
+        raise ListConfigError("site must be a table")
+    unknown = sorted(set(raw) - {"enabled"})
+    if unknown:
+        raise ListConfigError(f"unknown key: site.{unknown[0]}")
+    enabled = raw.get("enabled", False)
+    if not isinstance(enabled, bool):
+        raise ListConfigError("site.enabled must be true or false")
+    return SiteConfig(enabled=enabled)
+
+
+def _load_links(raw: Any) -> LinksConfig:
+    if not isinstance(raw, dict):
+        raise ListConfigError("links must be a table")
+    unknown = sorted(set(raw) - LINKS_KEYS)
+    if unknown:
+        raise ListConfigError(f"unknown key: links.{unknown[0]}")
+
+    archive = _as_str(raw.get("archive", "off"), "links.archive")
+    if archive not in ARCHIVE_MODES:
+        allowed = ", ".join(f'"{mode}"' for mode in ARCHIVE_MODES)
+        raise ListConfigError(
+            f"links.archive must be one of {allowed}, got {archive!r}"
+        )
+
+    limits = raw.get("archive_limits", {})
+    if not isinstance(limits, dict):
+        raise ListConfigError("links.archive_limits must be a table")
+    unknown_limits = sorted(set(limits) - LIMIT_KEYS)
+    if unknown_limits:
+        raise ListConfigError(f"unknown key: links.archive_limits.{unknown_limits[0]}")
+
+    return LinksConfig(
+        archive=archive,
+        exclude=_string_tuple(raw.get("exclude", []), "links.exclude"),
+        allowlist=_string_tuple(raw.get("allowlist", []), "links.allowlist"),
+        per_file_bytes=_as_int(
+            limits.get("per_file_bytes", 2_000_000),
+            "links.archive_limits.per_file_bytes",
+        ),
+        total_bytes=_as_int(
+            limits.get("total_bytes", 50_000_000), "links.archive_limits.total_bytes"
+        ),
+    )
+
+
+def _load_tags(raw: Any) -> TagVocabulary:
+    if not isinstance(raw, dict):
+        raise ListConfigError("tags must be a table")
+    unknown = sorted(set(raw) - set(TAG_AXES))
+    if unknown:
+        raise ListConfigError(f"unknown key: tags.{unknown[0]}")
+    pairs: dict[str, tuple[tuple[str, str], ...]] = {}
+    for axis in TAG_AXES:
+        table = raw.get(axis, {})
+        if not isinstance(table, dict):
+            raise ListConfigError(f"tags.{axis} must be a table")
+        entries: list[tuple[str, str]] = []
+        for label, glyph in table.items():
+            entries.append(
+                (
+                    _as_str(label, f"tags.{axis} label"),
+                    _as_str(glyph, f"tags.{axis}.{label}"),
+                )
+            )
+        pairs[axis] = tuple(entries)
+    if not any(pairs.values()):
+        return DEFAULT_TAG_VOCABULARY
+    return TagVocabulary(
+        type=pairs["type"], access=pairs["access"], status=pairs["status"]
+    )
+
+
+def _as_str(value: Any, key: str) -> str:
+    if not isinstance(value, str) or not value.strip():
+        raise ListConfigError(f"{key} must be a non-empty string")
+    return value
+
+
+def _as_int(value: Any, key: str) -> int:
+    if not isinstance(value, int) or isinstance(value, bool) or value < 0:
+        raise ListConfigError(f"{key} must be a positive whole number")
+    return value
+
+
+def _string_tuple(value: Any, key: str) -> tuple[str, ...]:
+    if not isinstance(value, list):
+        raise ListConfigError(f"{key} must be a list of strings")
+    return tuple(_as_str(item, key) for item in value)

@@ -1,0 +1,7 @@
+* text=auto eol=lf
+license text
+*.md linguist-documentation=false
+site/** linguist-generated=true
+archive/** linguist-vendored=true
+tools/package-lock.json linguist-generated=true
+uv.lock linguist-generated=true
