@@ -41,7 +41,11 @@ def check_toc_freshness(document: ListDocument, text: str) -> tuple[RuleViolatio
     rendered = render_contents(document)
     expected = [_entry_name(line) for line in rendered]
     expected_depth = dict(zip(expected, _depth_ranks(rendered), strict=False))
-    known = {heading.text.strip() for heading in document.headings if heading.level > 1}
+    known = {
+        heading.text.strip()
+        for heading in document.headings
+        if heading.level >= document.section_level
+    }
 
     violations: list[RuleViolation] = []
 

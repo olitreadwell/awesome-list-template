@@ -82,6 +82,10 @@ class ListDocument:
     tagline: str
     sections: tuple[ListSection, ...]
     headings: tuple[Heading, ...] = ()
+    # The heading depth this readme uses for a section. Most lists use 2, some
+    # group everything with 3 and have no level 2 section at all. Anything that
+    # walks headings has to agree with the parser about this.
+    section_level: int = 2
 
     @property
     def entries(self) -> tuple[ListEntry, ...]:

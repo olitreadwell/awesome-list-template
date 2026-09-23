@@ -133,6 +133,7 @@ def parse_readme(
         tagline=tagline,
         sections=tuple(built_sections),
         headings=tuple(headings),
+        section_level=section_level,
     )
 
 
