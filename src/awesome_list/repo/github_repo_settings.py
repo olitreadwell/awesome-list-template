@@ -8,9 +8,15 @@ from collections.abc import Sequence
 from typing import Any, cast
 
 
-def run_gh(command: Sequence[str]) -> str:
-    """Run one gh command and return its stdout."""
-    result = subprocess.run(list(command), capture_output=True, text=True, check=False)
+def run_gh(command: Sequence[str], body: str | None = None) -> str:
+    """Run one gh command and return its stdout.
+
+    ``body`` is sent on stdin, which is how gh takes a JSON request body
+    (``--input -``). Repeating -f flags cannot express a JSON array.
+    """
+    result = subprocess.run(
+        list(command), input=body, capture_output=True, text=True, check=False
+    )
     if result.returncode != 0:
         raise SystemExit(result.stderr.strip() or f"{command[0]} failed")
     return result.stdout.strip()

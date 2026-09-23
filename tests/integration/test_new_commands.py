@@ -30,16 +30,20 @@ def _record(store: list[list[str]], command: Sequence[str]) -> None:
 
 
 def _recorder(store: list[list[str]]) -> Callable[[Sequence[str]], int]:
-    def record(command: Sequence[str]) -> int:
+    def record(command: Sequence[str], body: str | None = None) -> int:
+        del body
         _record(store, command)
         return 0
 
     return record
 
 
-def _string_recorder(store: list[list[str]]) -> Callable[[Sequence[str]], str]:
-    def record(command: Sequence[str]) -> str:
+def _string_recorder(
+    store: list[list[str]], bodies: list[str | None]
+) -> Callable[..., str]:
+    def record(command: Sequence[str], body: str | None = None) -> str:
         _record(store, command)
+        bodies.append(body)
         return "{}"
 
     return record
@@ -95,15 +99,30 @@ def test_repo_setup_is_a_dry_run_until_apply(capsys: object) -> None:
 
 def test_repo_setup_apply_runs_one_gh_command_per_setting() -> None:
     seen: list[list[str]] = []
+    bodies: list[str | None] = []
 
     status = repo_setup_main(
-        ["--config", CONFIG, "--slug", "a/b", "--apply"],
-        runner=_string_recorder(seen),
+        ["--config", CONFIG, "--slug", "a/b", "--apply", "--description", "A list."],
+        runner=_string_recorder(seen, bodies),
     )
 
     assert status == 0
     assert [command[0] for command in seen] == ["gh", "gh", "gh"]
-    assert any("topics" in " ".join(command) for command in seen)
+    assert "--input" in seen[0]
+    assert bodies[0] == '{"description": "A list."}'
+
+
+def test_repo_setup_refuses_to_write_an_empty_description() -> None:
+    seen: list[list[str]] = []
+    bodies: list[str | None] = []
+
+    repo_setup_main(
+        ["--config", CONFIG, "--slug", "a/b", "--apply", "--description", "   "],
+        runner=_string_recorder(seen, bodies),
+    )
+
+    assert [command[0] for command in seen] == ["gh", "gh"]
+    assert "description" not in " ".join(body or "" for body in bodies)
 
 
 def test_export_writes_three_files(tmp_path: Path) -> None:
@@ -318,18 +337,3 @@ def test_compliance_audit_qualifies_the_config_slug_with_the_origin_owner(
     owner, _, name = seen[0].partition("/")
     assert owner
     assert name == "awesome-example"
-
-
-def test_repo_setup_sends_topics_as_an_array() -> None:
-    seen: list[list[str]] = []
-
-    repo_setup_main(
-        ["--config", CONFIG, "--slug", "a/b", "--apply"],
-        runner=_string_recorder(seen),
-    )
-
-    topics = " ".join(seen[1])
-
-    assert "names[]=awesome " in topics
-    assert "names[]=curated-list" in topics
-    assert '["awesome"' not in topics

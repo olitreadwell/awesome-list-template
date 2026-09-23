@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 import argparse
+import json
 import sys
-from collections.abc import Callable, Sequence
+from collections.abc import Callable
+from dataclasses import dataclass
 from pathlib import Path
 
 from awesome_list.config.load_list_config import ListConfigError, load_list_config
@@ -14,7 +16,15 @@ from awesome_list.repo.github_repo_settings import origin_remote, run_gh
 DEFAULT_TOPICS = ("awesome", "awesome-list", "curated-list")
 DEFAULT_BRANCH = "main"
 
-Runner = Callable[[Sequence[str]], str]
+Runner = Callable[..., str]
+
+
+@dataclass(frozen=True, slots=True)
+class GhCall:
+    """One gh invocation, and the JSON body it sends on stdin."""
+
+    argv: tuple[str, ...]
+    body: str | None = None
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -67,50 +77,59 @@ def main(
 
     if not args.apply:
         print("repo-setup: dry run, pass --apply to run these")
-        for command in commands:
-            print("  " + " ".join(command))
+        for call in commands:
+            print(
+                "  " + " ".join(call.argv) + (f"  <<< {call.body}" if call.body else "")
+            )
         return 0
 
     run = runner or run_gh
-    for command in commands:
-        print(run(command))
+    for call in commands:
+        print(run(call.argv, call.body))
     return 0
 
 
 def _commands(
     slug: str, description: str, topics: tuple[str, ...], branch: str
-) -> tuple[tuple[str, ...], ...]:
+) -> tuple[GhCall, ...]:
+    """Return the calls that set the settings, skipping anything empty.
+
+    An empty description is not sent: it would wipe a description somebody
+    wrote by hand, and a readme with no tagline says nothing about what the
+    repository should say.
+    """
     repository = f"repos/{slug}"
-    return (
-        (
-            "gh",
-            "api",
-            "-X",
-            "PATCH",
-            repository,
-            "-f",
-            f"description={description}",
-        ),
-        (
-            "gh",
-            "api",
-            "-X",
-            "PUT",
-            f"{repository}/topics",
-            "-H",
-            "Accept: application/vnd.github+json",
-            *(f"-f names[]={topic}" for topic in topics),
-        ),
-        (
-            "gh",
-            "api",
-            "-X",
-            "PATCH",
-            repository,
-            "-f",
-            f"default_branch={branch}",
-        ),
+    calls: list[GhCall] = []
+    if description.strip():
+        calls.append(
+            GhCall(
+                ("gh", "api", "-X", "PATCH", repository, "--input", "-"),
+                json.dumps({"description": description.strip()}),
+            )
+        )
+    calls.append(
+        GhCall(
+            (
+                "gh",
+                "api",
+                "-X",
+                "PUT",
+                f"{repository}/topics",
+                "-H",
+                "Accept: application/vnd.github+json",
+                "--input",
+                "-",
+            ),
+            json.dumps({"names": list(topics)}),
+        )
     )
+    calls.append(
+        GhCall(
+            ("gh", "api", "-X", "PATCH", repository, "--input", "-"),
+            json.dumps({"default_branch": branch}),
+        )
+    )
+    return tuple(calls)
 
 
 def _tagline(readme_path: Path) -> str:
