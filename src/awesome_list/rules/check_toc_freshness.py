@@ -2,13 +2,22 @@
 
 from __future__ import annotations
 
+from collections.abc import Sequence
+
 from awesome_list.parse.readme_model import ListDocument
 from awesome_list.rules.rule_violation import RuleViolation
-from awesome_list.toc.render_contents import DENIED_TOC_SECTIONS, render_contents
+from awesome_list.toc.render_contents import (
+    DENIED_TOC_SECTIONS,
+    render_contents,
+)
 from awesome_list.toc.sync_contents import _find_contents_heading, _toc_block
 
 RULE = "toc-freshness"
 ENTRY_PATTERN = "- ["
+DEPTH_FIX = (
+    "run make toc to regenerate the Contents section; awesome-lint fails a"
+    " nested list deeper than two levels"
+)
 
 
 def check_toc_freshness(document: ListDocument, text: str) -> tuple[RuleViolation, ...]:
@@ -27,23 +36,21 @@ def check_toc_freshness(document: ListDocument, text: str) -> tuple[RuleViolatio
         )
 
     start, end = _toc_block(lines, heading_index)
-    listed = [_entry_name(line) for line in lines[start:end]]
-    listed = [name for name in listed if name]
-
-    # Compare against what render_contents would write, so a nested heading in
-    # the readme is not reported as missing from its own table of contents.
+    listed_lines = [line for line in lines[start:end] if _entry_name(line)]
+    listed = [_entry_name(line) for line in listed_lines]
     rendered = render_contents(document)
     expected = [_entry_name(line) for line in rendered]
-    expected_raw = {_entry_name(line): line.rstrip() for line in rendered}
+    expected_depth = dict(zip(expected, _depth_ranks(rendered), strict=False))
     known = {heading.text.strip() for heading in document.headings if heading.level > 1}
+
     violations: list[RuleViolation] = []
 
-    for line_number, name in zip(range(start + 1, end + 1), listed, strict=False):
+    for number, name in zip(range(start + 1, end + 1), listed, strict=False):
         if name.lower() in DENIED_TOC_SECTIONS:
             violations.append(
                 RuleViolation(
                     rule=RULE,
-                    line=line_number,
+                    line=number,
                     message=f"{name} must not appear in the Contents section",
                     fix="remove this line; awesome.re keeps these out of the"
                     " table of contents",
@@ -61,22 +68,24 @@ def check_toc_freshness(document: ListDocument, text: str) -> tuple[RuleViolatio
                 )
             )
 
-    for line_number, name, raw in zip(
-        range(start + 1, end + 1), listed, lines[start:end], strict=False
+    listed_depth = _depth_ranks(listed_lines)
+    for number, name, depth in zip(
+        range(start + 1, end + 1), listed, listed_depth, strict=False
     ):
         if name.lower() in DENIED_TOC_SECTIONS:
             continue
         if name in expected:
-            if raw.rstrip() != expected_raw[name]:
+            # Compare nesting depth, not the number of spaces: two and four both
+            # render, and a list is free to use either.
+            if depth != expected_depth[name]:
                 violations.append(
                     RuleViolation(
                         rule=RULE,
-                        line=line_number,
+                        line=number,
                         message=(
-                            f"{name} is nested deeper than the Contents section allows"
+                            f"{name} sits at the wrong depth in the Contents section"
                         ),
-                        fix="run make toc to regenerate the Contents section;"
-                        " awesome-lint fails a nested list deeper than two levels",
+                        fix=DEPTH_FIX,
                     )
                 )
             continue
@@ -84,23 +93,29 @@ def check_toc_freshness(document: ListDocument, text: str) -> tuple[RuleViolatio
             violations.append(
                 RuleViolation(
                     rule=RULE,
-                    line=line_number,
+                    line=number,
                     message=f"{name} is nested deeper than the Contents section allows",
-                    fix="run make toc to regenerate the Contents section;"
-                    " awesome-lint fails a nested list deeper than two levels",
+                    fix=DEPTH_FIX,
                 )
             )
             continue
         violations.append(
             RuleViolation(
                 rule=RULE,
-                line=line_number,
+                line=number,
                 message=f"{name} is in the Contents section but not in the readme",
                 fix="run make toc to regenerate the Contents section",
             )
         )
 
     return tuple(violations)
+
+
+def _depth_ranks(lines: Sequence[str]) -> list[int]:
+    """Turn indentation widths into levels, so two spaces and four both read as one."""
+    widths = sorted({len(line) - len(line.lstrip(" ")) for line in lines})
+    rank = {width: index + 1 for index, width in enumerate(widths)}
+    return [rank[len(line) - len(line.lstrip(" "))] for line in lines]
 
 
 def _entry_name(line: str) -> str:

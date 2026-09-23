@@ -19,6 +19,9 @@ DENIED_TOC_SECTIONS = frozenset(
 
 # awesome-lint fails a Contents section nested more than two levels, so level
 # four headings stay out of it.
+# Two spaces per level, which is what GitHub renders and what every real list
+# uses. Four also renders, but it is not what a reader sees elsewhere.
+TOC_INDENT = "  "
 MAX_TOC_DEPTH = 3
 
 
@@ -41,7 +44,7 @@ def render_contents(document: ListDocument) -> tuple[str, ...]:
             continue
         if denied or heading.level > MAX_TOC_DEPTH:
             continue
-        indent = "    " * (heading.level - 2)
+        indent = TOC_INDENT * (heading.level - 2)
         lines.append(f"{indent}- [{name}](#{slug})")
 
     return tuple(lines)

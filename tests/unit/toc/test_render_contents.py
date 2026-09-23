@@ -38,7 +38,7 @@ def test_nested_headings_are_indented_one_level() -> None:
 
     assert lines == (
         "- [Tools](#tools)",
-        "    - [Sub Tools](#sub-tools)",
+        "  - [Sub Tools](#sub-tools)",
         "- [Data](#data)",
     )
 

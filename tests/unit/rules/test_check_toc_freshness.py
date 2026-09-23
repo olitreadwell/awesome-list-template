@@ -61,7 +61,7 @@ NESTED = """\
 ## Contents
 
 - [Tools](#tools)
-    - [Sub Tools](#sub-tools)
+  - [Sub Tools](#sub-tools)
 
 ## Tools
 
@@ -79,10 +79,17 @@ def test_a_nested_heading_in_the_contents_is_not_an_extra_line() -> None:
     assert violations == ()
 
 
-def test_a_line_nested_too_deep_is_reported() -> None:
+def test_four_space_indentation_is_not_a_depth_problem() -> None:
+    """Two spaces and four both render, so neither is wrong on its own."""
     text = NESTED.replace(
-        "    - [Sub Tools](#sub-tools)", "        - [Sub Tools](#sub-tools)"
+        "  - [Sub Tools](#sub-tools)", "        - [Sub Tools](#sub-tools)"
     )
+
+    assert check_toc_freshness(parse_readme(text), text) == ()
+
+
+def test_a_level_four_heading_in_the_contents_is_reported() -> None:
+    text = NESTED.replace("### Sub Tools", "#### Sub Tools")
 
     messages = [
         violation.message for violation in check_toc_freshness(parse_readme(text), text)
@@ -92,7 +99,7 @@ def test_a_line_nested_too_deep_is_reported() -> None:
 
 
 def test_a_nested_heading_missing_from_the_contents_is_reported() -> None:
-    text = NESTED.replace("    - [Sub Tools](#sub-tools)\n", "")
+    text = NESTED.replace("  - [Sub Tools](#sub-tools)\n", "")
 
     violations = check_toc_freshness(parse_readme(text), text)
 
