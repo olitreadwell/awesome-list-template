@@ -225,7 +225,7 @@ It stays under 10 seconds so nobody is tempted to skip it.
 ```
 readme.md                     the list; only source of truth for entries
 awesome.toml                  list name, repo slug, badge, sections, tag vocab,
-                              site, links, and github stats policy
+                              site, links, structure, and github stats policy
 github-stats.json             stars and last push per repo, written by make stats
 contributing.md               contributor guide, linked from readme Footnotes
 code-of-conduct.md            Contributor Covenant 2.1

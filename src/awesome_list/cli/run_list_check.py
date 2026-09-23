@@ -55,6 +55,7 @@ def main(argv: list[str] | None = None) -> int:
         github_stats_enabled=github_enabled,
         github_stats_max_age_days=config.github.max_age_days if config else 14,
         allowed_urls=config.links.allowlist if config else (),
+        nested_details_allowed=config.structure.nested_details if config else False,
     )
 
     errors = tuple(v for v in violations if v.severity == "error")

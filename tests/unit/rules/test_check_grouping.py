@@ -60,3 +60,28 @@ def test_flags_entry_nested_under_an_entry(
 
 def test_flags_entry_nested_too_deep(fixture_readme: Callable[[str], str]) -> None:
     assert any("nested too deep" in message for message in messages(fixture_readme))
+
+
+def test_nested_details_are_allowed_when_the_list_opts_in(
+    fixture_readme: Callable[[str], str],
+) -> None:
+    """A list can declare that sub-bullets under an entry are details of it."""
+    document = parse_readme(fixture_readme("dirty-grouping.md"))
+    flagged = [
+        violation.message
+        for violation in check_grouping(document, SECTIONS, nested_details_allowed=True)
+    ]
+
+    assert not [message for message in flagged if "nested under an entry" in message]
+
+
+def test_nesting_that_is_too_deep_is_still_flagged_when_details_are_allowed(
+    fixture_readme: Callable[[str], str],
+) -> None:
+    document = parse_readme(fixture_readme("dirty-grouping.md"))
+    flagged = [
+        violation.message
+        for violation in check_grouping(document, SECTIONS, nested_details_allowed=True)
+    ]
+
+    assert any("nested too deep" in message for message in flagged)

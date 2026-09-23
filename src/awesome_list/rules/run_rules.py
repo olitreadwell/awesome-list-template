@@ -29,6 +29,7 @@ def run_rules(
     github_stats_enabled: bool = False,
     github_stats_max_age_days: int = 14,
     allowed_urls: tuple[str, ...] = (),
+    nested_details_allowed: bool = False,
 ) -> tuple[RuleViolation, ...]:
     """Return every violation in the document, ordered by line."""
     violations: list[RuleViolation] = []
@@ -41,7 +42,13 @@ def run_rules(
 
     violations.extend(check_duplicate_urls(document, allowed))
     violations.extend(check_bare_urls(document))
-    violations.extend(check_grouping(document, entry_sections))
+    violations.extend(
+        check_grouping(
+            document,
+            entry_sections,
+            nested_details_allowed=nested_details_allowed,
+        )
+    )
     violations.extend(check_toc_freshness(document, text))
     violations.extend(
         check_github_stats(

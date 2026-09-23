@@ -13,6 +13,7 @@ from awesome_list.config.list_config import (
     ListConfig,
     SiteConfig,
     SourcesConfig,
+    StructureConfig,
 )
 from awesome_list.tags import DEFAULT_TAG_VOCABULARY, TagVocabulary
 
@@ -26,11 +27,13 @@ TOP_LEVEL_KEYS = {
     "links",
     "github",
     "sources",
+    "structure",
     "tags",
 }
 LINKS_KEYS = {"archive", "exclude", "allowlist", "archive_limits"}
 GITHUB_KEYS = {"stats", "max_age_days", "snapshot"}
 SOURCES_KEYS = {"lists", "keywords", "report"}
+STRUCTURE_KEYS = {"nested_details"}
 LIMIT_KEYS = {"per_file_bytes", "total_bytes"}
 TAG_AXES = ("type", "access", "status")
 
@@ -70,6 +73,7 @@ def load_list_config(path: Path) -> ListConfig:
         links=_load_links(raw.get("links", {})),
         github=_load_github(raw.get("github", {})),
         sources=_load_sources(raw.get("sources", {})),
+        structure=_load_structure(raw.get("structure", {})),
         tags=_load_tags(raw.get("tags", {}), present="tags" in raw),
         source_path=path,
     )
@@ -154,6 +158,20 @@ def _load_sources(raw: Any) -> SourcesConfig:
             raw.get("report", "reports/source-candidates.md"), "sources.report"
         ),
     )
+
+
+def _load_structure(raw: Any) -> StructureConfig:
+    if not isinstance(raw, dict):
+        raise ListConfigError("structure must be a table")
+    unknown = sorted(set(raw) - STRUCTURE_KEYS)
+    if unknown:
+        raise ListConfigError(f"unknown key: structure.{unknown[0]}")
+
+    nested_details = raw.get("nested_details", False)
+    if not isinstance(nested_details, bool):
+        raise ListConfigError("structure.nested_details must be true or false")
+
+    return StructureConfig(nested_details=nested_details)
 
 
 def _load_tags(raw: Any, *, present: bool = False) -> TagVocabulary:

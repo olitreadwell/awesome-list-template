@@ -27,6 +27,19 @@ class SourcesConfig:
 
 
 @dataclass(frozen=True, slots=True)
+class StructureConfig:
+    """How this list is allowed to nest.
+
+    A sub-bullet under an entry is a grouping mistake by default. Lists that
+    hang detail links such as "Home page" or "F-Droid" off an entry set
+    ``nested_details`` and the engine reads those bullets as part of the entry
+    above them instead.
+    """
+
+    nested_details: bool = False
+
+
+@dataclass(frozen=True, slots=True)
 class GithubConfig:
     """Whether GitHub links carry stars and activity, and how fresh that is."""
 
@@ -59,5 +72,6 @@ class ListConfig:
     links: LinksConfig = LinksConfig()
     github: GithubConfig = GithubConfig()
     sources: SourcesConfig = SourcesConfig()
+    structure: StructureConfig = StructureConfig()
     tags: TagVocabulary = DEFAULT_TAG_VOCABULARY
     source_path: Path = Path("awesome.toml")

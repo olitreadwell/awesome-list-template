@@ -31,6 +31,12 @@ allowlist = []
 per_file_bytes = 2000000
 total_bytes = 50000000
 
+[structure]
+# A sub-bullet under an entry is a grouping mistake by default. A list that
+# hangs detail links such as "Home page" or "F-Droid" off an entry sets this to
+# true and the engine reads those bullets as part of the entry above them.
+nested_details = false
+
 [github]
 # Every GitHub link in the list carries stars and a last-push date, refreshed by
 # make stats and checked offline by make stats-check. "stats" is on by default;

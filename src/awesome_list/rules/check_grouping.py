@@ -13,12 +13,18 @@ MAX_ENTRY_DEPTH = 3
 
 
 def check_grouping(
-    document: ListDocument, entry_sections: tuple[str, ...] = ()
+    document: ListDocument,
+    entry_sections: tuple[str, ...] = (),
+    *,
+    nested_details_allowed: bool = False,
 ) -> tuple[RuleViolation, ...]:
     """Return every grouping problem in the document.
 
     A section is only expected to hold entries when the config lists it, so
     prose sections such as Contributing or Legend are left alone.
+
+    A list that sets ``structure.nested_details`` keeps its detail bullets under
+    the entry they belong to, so those bullets are not reported as misplaced.
     """
     violations: list[RuleViolation] = []
 
@@ -46,7 +52,7 @@ def check_grouping(
                     )
                 )
         for entry in section.entries:
-            if entry.nested_under_entry:
+            if entry.nested_under_entry and not nested_details_allowed:
                 violations.append(
                     RuleViolation(
                         rule=RULE,

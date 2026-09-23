@@ -255,3 +255,50 @@ def test_rejects_empty_name(tmp_path: Path) -> None:
 
     with pytest.raises(ListConfigError, match="name must be a non-empty string"):
         load_list_config(write(tmp_path, body))
+
+
+def test_structure_defaults_to_flagging_nested_details(tmp_path: Path) -> None:
+    config = load_list_config(write(tmp_path, MINIMAL))
+
+    assert config.structure.nested_details is False
+
+
+def test_reads_structure_nested_details(tmp_path: Path) -> None:
+    body = (
+        MINIMAL
+        + """
+[structure]
+nested_details = true
+"""
+    )
+    config = load_list_config(write(tmp_path, body))
+
+    assert config.structure.nested_details is True
+
+
+def test_rejects_unknown_structure_key(tmp_path: Path) -> None:
+    body = (
+        MINIMAL
+        + """
+[structure]
+nested = true
+"""
+    )
+
+    with pytest.raises(ListConfigError, match=r"unknown key: structure\.nested"):
+        load_list_config(write(tmp_path, body))
+
+
+def test_rejects_nested_details_that_is_not_a_boolean(tmp_path: Path) -> None:
+    body = (
+        MINIMAL
+        + """
+[structure]
+nested_details = "yes"
+"""
+    )
+
+    with pytest.raises(
+        ListConfigError, match=r"structure\.nested_details must be true or false"
+    ):
+        load_list_config(write(tmp_path, body))
