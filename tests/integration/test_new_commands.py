@@ -318,3 +318,18 @@ def test_compliance_audit_qualifies_the_config_slug_with_the_origin_owner(
     owner, _, name = seen[0].partition("/")
     assert owner
     assert name == "awesome-example"
+
+
+def test_repo_setup_sends_topics_as_an_array() -> None:
+    seen: list[list[str]] = []
+
+    repo_setup_main(
+        ["--config", CONFIG, "--slug", "a/b", "--apply"],
+        runner=_string_recorder(seen),
+    )
+
+    topics = " ".join(seen[1])
+
+    assert "names[]=awesome " in topics
+    assert "names[]=curated-list" in topics
+    assert '["awesome"' not in topics

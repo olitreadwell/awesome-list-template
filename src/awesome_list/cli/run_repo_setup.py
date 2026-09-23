@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import argparse
-import json
 import sys
 from collections.abc import Callable, Sequence
 from pathlib import Path
@@ -100,8 +99,7 @@ def _commands(
             f"{repository}/topics",
             "-H",
             "Accept: application/vnd.github+json",
-            "-f",
-            f"names={json.dumps(list(topics))}",
+            *(f"-f names[]={topic}" for topic in topics),
         ),
         (
             "gh",
