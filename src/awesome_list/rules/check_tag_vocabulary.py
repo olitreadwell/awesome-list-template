@@ -45,6 +45,10 @@ def check_tag_vocabulary(
                 )
             )
     for axis in REQUIRED_AXES:
+        # An axis is only required when the config defines tags for it, so a
+        # list that does not use tags is not nagged about them.
+        if not vocabulary.labels_for(axis):
+            continue
         if counts[axis] == 0 and not any(
             item_axis == axis for item_axis, _ in entry.unknown_tags
         ):

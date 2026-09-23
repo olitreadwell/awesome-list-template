@@ -5,8 +5,9 @@ from __future__ import annotations
 from collections.abc import Callable
 
 from awesome_list.parse.parse_readme import parse_readme
+from awesome_list.parse.readme_model import ListEntry
 from awesome_list.rules.check_tag_vocabulary import check_tag_vocabulary
-from awesome_list.tags import DEFAULT_TAG_VOCABULARY
+from awesome_list.tags import DEFAULT_TAG_VOCABULARY, TagVocabulary
 
 
 def tagged(fixture_readme: Callable[[str], str]) -> dict[str, list[str]]:
@@ -48,3 +49,16 @@ def test_flags_repeated_axis(fixture_readme: Callable[[str], str]) -> None:
     assert any(
         "more than one type tag" in message for message in found["Duplicate Axis"]
     )
+
+
+def test_axes_without_a_vocabulary_are_not_required() -> None:
+    entry = ListEntry(
+        name="Untagged",
+        url="https://untagged.example.com/",
+        description="no tags at all.",
+        tags=(),
+        line=1,
+        raw="- [Untagged](https://untagged.example.com/) - no tags at all.",
+    )
+
+    assert check_tag_vocabulary(entry, TagVocabulary()) == ()

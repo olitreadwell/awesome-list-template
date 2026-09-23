@@ -15,6 +15,7 @@ from awesome_list.parse.readme_model import (
     ListGroup,
     ListSection,
     ListTag,
+    PlainBullet,
 )
 from awesome_list.tags import DEFAULT_TAG_VOCABULARY, TagVocabulary
 
@@ -139,6 +140,7 @@ def _build_section(
 ) -> ListSection:
     entries: list[ListEntry] = []
     groups: list[_GroupDraft] = []
+    plain_bullets: list[PlainBullet] = []
     last_kind: str | None = None
 
     for item in draft.items:
@@ -175,10 +177,17 @@ def _build_section(
         if entry is not None:
             entries.append(entry)
 
+    for group in groups:
+        if not group.has_children:
+            plain_bullets.append(
+                PlainBullet(text=group.item.text.strip(), line=group.item.line)
+            )
+
     return ListSection(
         name=draft.name,
         line=draft.line,
         entries=tuple(entries),
+        plain_bullets=tuple(plain_bullets),
         groups=tuple(
             ListGroup(
                 name=group.item.text.strip(),

@@ -41,6 +41,14 @@ class ListEntry:
 
 
 @dataclass(frozen=True, slots=True)
+class PlainBullet:
+    """A bullet with no link, used for pointers and prose asides."""
+
+    text: str
+    line: int
+
+
+@dataclass(frozen=True, slots=True)
 class ListGroup:
     """A bullet that names a group, with its indented entries."""
 
@@ -57,6 +65,7 @@ class ListSection:
     line: int
     entries: tuple[ListEntry, ...]
     groups: tuple[ListGroup, ...]
+    plain_bullets: tuple[PlainBullet, ...] = ()
 
     @property
     def all_entries(self) -> tuple[ListEntry, ...]:

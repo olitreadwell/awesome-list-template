@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import replace
 
 from awesome_list.parse.readme_model import ListDocument
+from awesome_list.rules.check_bare_urls import check_bare_urls
 from awesome_list.rules.check_duplicate_urls import check_duplicate_urls
 from awesome_list.rules.check_entry_grammar import check_entry_grammar
 from awesome_list.rules.check_grouping import check_grouping
@@ -32,6 +33,7 @@ def run_rules(
         violations.extend(check_tag_vocabulary(entry, vocabulary))
 
     violations.extend(check_duplicate_urls(document))
+    violations.extend(check_bare_urls(document))
     violations.extend(check_grouping(document, entry_sections))
     violations.extend(check_toc_freshness(document, text))
 

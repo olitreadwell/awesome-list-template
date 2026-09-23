@@ -65,3 +65,11 @@ def test_entry_lines_are_one_based(fixture_readme: Callable[[str], str]) -> None
 
     assert lines == sorted(lines)
     assert all(line > 0 for line in lines)
+
+
+def test_plain_bullets_are_kept_with_their_lines(
+    fixture_readme: Callable[[str], str],
+) -> None:
+    document = parse_readme(fixture_readme("dirty-bare-urls.md"))
+
+    assert [bullet.line for bullet in document.sections[0].plain_bullets] == [11, 12]
