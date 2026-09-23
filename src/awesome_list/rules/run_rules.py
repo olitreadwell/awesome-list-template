@@ -43,7 +43,9 @@ def run_rules(
         violations.extend(check_url_shape(entry, allowed))
         violations.extend(check_tag_vocabulary(entry, vocabulary))
 
-    violations.extend(check_duplicate_urls(document, allowed))
+    violations.extend(
+        check_duplicate_urls(document, allowed, skip_details=nested_details_allowed)
+    )
     violations.extend(check_bare_urls(document))
     violations.extend(
         check_grouping(

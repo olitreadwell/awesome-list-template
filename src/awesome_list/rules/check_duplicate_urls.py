@@ -10,17 +10,26 @@ RULE = "duplicate-urls"
 
 
 def check_duplicate_urls(
-    document: ListDocument, allowed_urls: frozenset[str] = frozenset()
+    document: ListDocument,
+    allowed_urls: frozenset[str] = frozenset(),
+    *,
+    skip_details: bool = False,
 ) -> tuple[RuleViolation, ...]:
     """Flag every entry that repeats a URL an earlier entry already uses.
 
     An allowlisted URL is skipped, because a repeated URL is deliberate
     sometimes and the allowlist is where a list says so.
+
+    A list that declares sub-bullets as its details passes ``skip_details``,
+    because two entries giving the same example link are not two of the same
+    entry.
     """
     first_seen: dict[str, str] = {}
     violations: list[RuleViolation] = []
 
     for entry in document.entries:
+        if skip_details and entry.nested_under_entry:
+            continue
         if entry.url.strip() in allowed_urls:
             continue
         key = normalize_url(entry.url)
