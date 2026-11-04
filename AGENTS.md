@@ -1,5 +1,12 @@
 # Agent instructions
 
+<!-- coding-standards:begin -->
+Project coding rules: `CODING_STANDARDS.md`. Global baseline:
+`~/.agents/standards/CODING_STANDARDS.md`. Read both before changing
+behaviour.
+<!-- coding-standards:end -->
+
+
 This repository maintains an awesome list. Read `SPEC.md` before changing
 behaviour: it is the contract, and `AUTOMATIONS.md` lists what each automation is
 allowed to do.
